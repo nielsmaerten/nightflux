@@ -1,0 +1,20 @@
+{
+  // ESLint will format documents on save
+  // Vscode's default formatter will be disabled
+  // Don't use ALT+SHIFT+F to format documents (using the default formatter)
+  // Just save.
+  "editor.formatOnSave": false,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+
+  // Remove squiggly lines under eslint style issues
+  // if they can be fixed automatically (on save)
+  "eslint.rules.customizations": [
+    {
+      "rule": "@stylistic/*",
+      "fixable": true,
+      "severity": "off"
+    }
+  ]
+}

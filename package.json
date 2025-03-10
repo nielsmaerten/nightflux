@@ -1,0 +1,26 @@
+{
+  "name": "nightflux",
+  "version": "1.0.0",
+  "main": "dist/main.js",
+  "author": "Niels Maerten <niels@maerten.be>",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint",
+    "lint:fix": "eslint --fix",
+    "start": "node dist/main.js",
+    "prepare": "husky"
+  },
+  "dependencies": {
+    "@stylistic/eslint-plugin": "^4.0.1",
+    "eslint": "^9.20.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.4.3",
+    "typescript": "^5.7.3"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.20.0",
+    "globals": "^15.15.0",
+    "typescript-eslint": "^8.24.1"
+  }
+}
