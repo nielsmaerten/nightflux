@@ -27,7 +27,9 @@ export default [
   {
     rules: {
       'no-debugger': 'warn',
+      'no-console': 'error',
       '@typescript-eslint/no-unused-vars': 'warn',
+      'no-process-env': 'error',
     },
   },
 ];

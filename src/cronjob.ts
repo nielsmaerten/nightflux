@@ -2,7 +2,7 @@ import { CronJob } from 'cron';
 import config from './config';
 import onTick from './tick';
 
-const timezone = process.env.TZ || undefined;
+const timezone = config.timezone || undefined;
 const startImmediately = false;
 const onComplete = null;
 

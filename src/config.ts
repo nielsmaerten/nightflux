@@ -1,3 +1,4 @@
+/* eslint-disable no-process-env */
 import * as dotenv from 'dotenv';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -18,6 +19,8 @@ export interface NightfluxConfig {
   influxDbToken: string;
   cronSchedule: string;
   logfile?: string;
+  logLevel?: string;
+  timezone?: string;
 }
 
 /**
@@ -56,6 +59,8 @@ export function loadConfig(): NightfluxConfig {
 
     // Optional settings
     logfile: process.env.NIGHTFLUX_LOGFILE,
+    logLevel: process.env.NIGHTFLUX_LOGLEVEL,
+    timezone: process.env.NIGHTFLUX_TIMEZONE,
   };
 }
 
