@@ -1,6 +1,6 @@
 import logger from './logger';
 import * as nightscout from './clients/nightscout';
-import * as influxDB from './clients/influxdb/metadata';
+import * as influxDB from './clients/influxdb'; // TODO: Create a barrel file that exports all client functions
 
 // Max number of entries in a single tick
 const MAX_ENTRIES = 100_000;
@@ -14,6 +14,7 @@ export default async function onTick() {
   // Loop until there is no more data to fetch
   while (moreData) {
     // Fetch 1 batch of data from Nightscout
+    // TODO: Implement fetchDataSince in the nightscout client
     const data = await nightscout.fetchDataSince(syncedUpTo);
     entriesFetched += data.length;
     syncedUpTo = data[data.length - 1].date;
@@ -32,6 +33,7 @@ export default async function onTick() {
     }
 
     // Write fetched data to InfluxDB
+    // TODO: Write the entries to InfluxDB
     await influxDB.setLatestEntryDate(syncedUpTo);
   }
 }
