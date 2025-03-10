@@ -1,6 +1,6 @@
 import logger from './logger';
 import * as nightscout from './clients/nightscout';
-import * as influxDB from './clients/influxdb';
+import * as influxDB from './clients/influxdb/metadata';
 
 // Max number of entries in a single tick
 const MAX_ENTRIES = 100_000;
@@ -32,6 +32,6 @@ export default async function onTick() {
     }
 
     // Write fetched data to InfluxDB
-    await influxDB.writeEntries(data);
+    await influxDB.setLatestEntryDate(syncedUpTo);
   }
 }
