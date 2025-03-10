@@ -1,4 +1,5 @@
 import { getAllEnvVars, loadConfig } from './config';
+import cronjob from './cronjob';
 
 try {
   console.log('Nightflux - Starting up...');
@@ -18,6 +19,10 @@ try {
       console.log(`${key}: ${value}`);
     });
   }
+
+  // Start the application
+  console.log('Nightflux - Ready');
+  cronjob.start();
 }
 catch (error) {
   console.error('Error loading configuration:', error instanceof Error ? error.message : error);

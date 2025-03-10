@@ -9,7 +9,7 @@ if (fs.existsSync(envPath)) {
   dotenv.config({ override: false });
 }
 
-interface NightfluxConfig {
+export interface NightfluxConfig {
   nightscoutUrl: string;
   nightscoutToken: string;
   influxDbUrl: string;
