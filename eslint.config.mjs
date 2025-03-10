@@ -24,4 +24,10 @@ export default [
   stylistic.configs.customize({
     semi: true,
   }),
+  {
+    rules: {
+      'no-debugger': 'warn',
+      '@typescript-eslint/no-unused-vars': 'warn',
+    },
+  },
 ];

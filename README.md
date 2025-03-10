@@ -1,6 +1,7 @@
 # Nightflux
 
-**Nightflux** is a lightweight tool that imports events from **Nightscout** into **InfluxDB** on a schedule you define. It can be run as a standalone binary or using Docker Compose for easy deployment.
+**Nightflux** is a lightweight tool that imports events from **Nightscout** into **InfluxDB** on a schedule you define.  
+It can be run as a standalone binary or using Docker Compose for easy deployment.
 
 ## Supported Events
 
