@@ -30,12 +30,6 @@ export default [
       'no-console': 'error',
       '@typescript-eslint/no-unused-vars': 'warn',
       'no-process-env': 'error',
-      'no-restricted-imports': ['warn', {
-        patterns: [{
-          group: ['.*'],
-          message: 'Prefer @/ for internal imports',
-        }],
-      }],
     },
   },
 ];
