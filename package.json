@@ -12,6 +12,7 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "@influxdata/influxdb-client": "^1.35.0",
     "@stylistic/eslint-plugin": "^4.0.1",
     "cron": "^4.1.0",
     "dotenv": "^16.4.7",
