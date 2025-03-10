@@ -1,6 +1,6 @@
-import logger from './logger';
-import * as nightscout from './clients/nightscout';
-import * as influxDB from './clients/influxdb';
+import logger from '@/logger';
+import * as nightscout from '@/clients/nightscout';
+import * as influxDB from '@/clients/influxdb';
 
 // Max number of entries in a single tick
 const MAX_ENTRIES = 100_000;
