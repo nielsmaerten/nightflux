@@ -1,6 +1,7 @@
 import config from './config';
+import logger from './logger';
 
 export default function onTick() {
-  console.log('Tick!');
-  console.log('Configuration:', config);
+  logger.info('Tick');
+  logger.debug('Configuration:', config);
 }

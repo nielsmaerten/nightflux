@@ -1,30 +1,31 @@
 import { getAllEnvVars, loadConfig } from './config';
 import cronjob from './cronjob';
+import logger from './logger';
 
 try {
-  console.log('Nightflux - Starting up...');
+  logger.info('Nightflux - Starting up...');
 
   // Load configuration
   loadConfig();
-  console.log('Configuration loaded successfully');
+  logger.debug('Configuration loaded successfully');
 
   // Print all environment variables
   const envVars = getAllEnvVars();
 
   if (Object.keys(envVars).length === 0) {
-    console.log('No NIGHTFLUX_ environment variables found');
+    logger.warn('No NIGHTFLUX_ environment variables found');
   }
   else {
     Object.entries(envVars).forEach(([key, value]) => {
-      console.log(`${key}: ${value}`);
+      logger.debug(`${key}: ${value}`);
     });
   }
 
   // Start the application
-  console.log('Nightflux - Ready');
+  logger.info('Nightflux - Ready');
   cronjob.start();
 }
 catch (error) {
-  console.error('Error loading configuration:', error instanceof Error ? error.message : error);
+  logger.error('Error loading configuration:', error instanceof Error ? error.message : error);
   process.exit(1);
 }
