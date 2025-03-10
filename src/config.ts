@@ -21,6 +21,7 @@ export interface NightfluxConfig {
   logfile?: string;
   logLevel?: string;
   timezone?: string;
+  runOnce: boolean;
 }
 
 /**
@@ -61,6 +62,7 @@ export function loadConfig(): NightfluxConfig {
     logfile: process.env.NIGHTFLUX_LOGFILE,
     logLevel: process.env.NIGHTFLUX_LOGLEVEL,
     timezone: process.env.NIGHTFLUX_TIMEZONE,
+    runOnce: parseInt(process.env.NIGHTFLUX_RUN_ONCE || '0', 10) === 1,
   };
 }
 

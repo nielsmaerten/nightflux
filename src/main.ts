@@ -1,4 +1,4 @@
-import { getAllEnvVars, loadConfig } from './config';
+import config, { getAllEnvVars, loadConfig } from './config';
 import cronjob from './cronjob';
 import logger from './logger';
 
@@ -23,7 +23,8 @@ try {
 
   // Start the application
   logger.info('Nightflux - Ready');
-  cronjob.start();
+  if (!config.runOnce) cronjob.start();
+  else cronjob.fireOnTick().then(() => process.exit(0));
 }
 catch (error) {
   logger.error('Error loading configuration:', error instanceof Error ? error.message : error);

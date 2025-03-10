@@ -55,9 +55,7 @@ Nightflux reads configuration values from environment variables. If a `.env` fil
 
 ### Optional Environment Variables
 
-- `NIGHTFLUX_LOGFILE`: Path to a log file where Nightflux will write logs. If not set, logs are printed to stdout.
-- `NIGHTFLUX_LOGLEVEL`: Sets the logging level for Nightflux. The default is `INFO`.
-- `NIGHTFLUX_TIMEZONE`: Specifies the timezone for scheduling and logging. This should be a valid IANA timezone string (e.g., `America/New_York`). If not set, the system's local timezone will be used.
+Refer to `.env.example` for additional options.
 
 ## Example `docker-compose.yml`
 
