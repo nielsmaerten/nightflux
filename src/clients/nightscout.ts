@@ -59,6 +59,7 @@ export default class NightscoutClient {
   }
 
   public async fetchDataSince(date: Date, limit = FETCH_LIMIT): Promise<{ date: Date }[]> {
+    // @TODO: Fetch other entries like carbs, bolus and basals
     const entries = await this.fetchEntriesSince(date, limit);
     return entries;
   }
