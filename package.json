@@ -1,14 +1,15 @@
 {
   "name": "nightflux",
   "version": "1.0.0",
-  "main": "dist/main.js",
   "author": "Niels Maerten <niels@maerten.be>",
   "license": "MIT",
   "scripts": {
-    "build": "tsc",
+    "check": "tsc --noEmit",
     "lint": "eslint",
     "lint:fix": "eslint --fix",
-    "start": "node dist/main.js",
+    "start": "bun src/nightflux.ts",
+    "dev": "bun --inspect-wait src/nightflux.ts",
+    "compile": "bun build --compile src/nightflux.ts",
     "prepare": "husky"
   },
   "dependencies": {
