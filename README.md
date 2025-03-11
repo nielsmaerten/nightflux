@@ -7,10 +7,10 @@ It can be run as a standalone binary or using Docker Compose for easy deployment
 
 Nightflux currently supports importing the following Nightscout events:
 
-- Sensor glucose values
-- Carb entries
-- Temporary basal rates
-- Insulin boluses
+- [x] Glucose values
+- [ ] Carb entries
+- [ ] Temporary basal rates
+- [ ] Insulin boluses
 
 More event types may be added in the future.
 
