@@ -1,12 +1,14 @@
 import logger from './logger';
 
+const msg = 'Received SIGINT: Writing final data points and exiting...';
+
 process.on('SIGINT', () => {
-  logger.info('Received SIGINT, wrapping up...');
+  logger.info(msg);
   stop();
 });
 
 process.on('SIGTERM', () => {
-  logger.info('Received SIGTERM, wrapping up...');
+  logger.info(msg);
   stop();
 });
 

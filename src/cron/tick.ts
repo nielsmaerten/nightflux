@@ -30,15 +30,15 @@ export default async function onTick() {
     await InfluxDbClient.writePoints(data);
     await InfluxDbClient.setLatestEntryDate(syncedUpTo);
 
+    // Check if we should stop early
+    if (isStopping()) break;
+
     // Break if more than MAX_ENTRIES entries were fetched
     if (entriesFetched > MAX_ENTRIES) {
       logger.warn(`Fetched more than ${MAX_ENTRIES} entries, deferring until next tick`);
       moreData = false;
       break;
     }
-
-    // Check if we should stop early
-    if (isStopping()) break;
   }
 
   // The loop is done, flush the write API
