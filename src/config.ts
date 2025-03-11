@@ -75,7 +75,9 @@ export function loadConfig(): NightfluxConfig {
 function getRequiredEnv(name: string): string {
   const value = process.env[name];
   if (!value) {
-    throw new Error(`Required environment variable ${name} is not defined`);
+    // eslint-disable-next-line no-console
+    console.error(`ERROR: Required environment variable ${name} is not defined`);
+    process.exit(1);
   }
   return value;
 }
