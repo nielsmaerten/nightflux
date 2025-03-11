@@ -11,7 +11,7 @@ export default class InfluxClient {
   public writeApi: WriteApi;
 
   private constructor() {
-    logger.info('Initializing InfluxDB client');
+    logger.debug('Initializing InfluxDB client');
     this.influxDB = new InfluxDB({ url: influxDbUrl, token: influxDbToken });
     this.queryApi = this.influxDB.getQueryApi(influxDbOrg);
     this.writeApi = this.influxDB.getWriteApi(influxDbOrg, influxDbBucket);

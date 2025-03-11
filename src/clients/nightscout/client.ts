@@ -5,7 +5,7 @@ import { jwtDecode } from 'jwt-decode';
 import logger from '../../utils/logger';
 import { NightfluxPoint } from '../influxdb/influx-types';
 
-const FETCH_LIMIT = 500;
+const FETCH_LIMIT = 200;
 
 export default class NightscoutClient {
   private static instance: NightscoutClient | null = null;
@@ -15,7 +15,7 @@ export default class NightscoutClient {
   private jwtExpiration = 0;
 
   private constructor() {
-    logger.info('Initializing Nightscout client');
+    logger.debug('Initializing Nightscout client');
 
     // Get Nightscout configuration
     const { nightscoutToken, nightscoutUrl } = config;
@@ -61,13 +61,12 @@ export default class NightscoutClient {
   }
 
   public async fetchDataSince(date: Date, limit = FETCH_LIMIT): Promise<NightfluxPoint[]> {
-    // @TODO: Fetch other entries like carbs, bolus and basals
+    logger.debug(`Fetching Nightscout data since ${date.toISOString()}`);
     const entries = await this.fetchEntriesSince(date, limit);
     return entries;
   }
 
   private async fetchEntriesSince(date: Date, limit: number): Promise<NightfluxPoint[]> {
-    logger.info(`Fetching Nightscout entries since ${date.toISOString()}`);
     const response = await this.nightscoutClient.get('/api/v3/entries.json', {
       params: {
         limit,

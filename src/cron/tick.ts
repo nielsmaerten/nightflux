@@ -2,9 +2,10 @@ import logger from '../utils/logger';
 import { isStopping } from '../utils/interrupt';
 import NightscoutClient from '../clients/nightscout/client';
 import InfluxDbClient from '../clients/influxdb/_module';
+import config from '../config';
 
 // Max number of entries in a single tick
-const MAX_ENTRIES = 1_000;
+const MAX_ENTRIES = config.limit || 10_000;
 
 export default async function onTick() {
   // Get date of the latest entry in InfluxDB
@@ -39,6 +40,10 @@ export default async function onTick() {
       moreData = false;
       break;
     }
+
+    // Log progress
+    const paddedTotal = String(entriesFetched).padStart(6, ' ');
+    logger.info(`Fetched ${paddedTotal} entries, synced up to ${syncedUpTo.toISOString()}`);
   }
 
   // The loop is done, flush the write API

@@ -50,7 +50,7 @@ export async function setLatestEntryDate(lastDate: Date): Promise<void> {
     // Write the point to InfluxDB
     writeApi.writePoint(point);
 
-    logger.info(`Updated metadata with latest entry date: ${lastDate.toISOString()}`);
+    logger.debug(`Updated metadata with latest entry date: ${lastDate.toISOString()}`);
   }
   catch (error) {
     logger.error('Failed to write metadata to InfluxDB', error);

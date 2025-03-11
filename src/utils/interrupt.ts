@@ -3,12 +3,12 @@ import logger from './logger';
 const msg = 'Received SIGINT: Writing final data points and exiting...';
 
 process.on('SIGINT', () => {
-  logger.info(msg);
+  logger.warn(msg);
   stop();
 });
 
 process.on('SIGTERM', () => {
-  logger.info(msg);
+  logger.warn(msg);
   stop();
 });
 

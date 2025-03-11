@@ -46,5 +46,5 @@ export async function writePoints(data: NightfluxPoint[]) {
     }
   }
 
-  logger.info(`Wrote ${data.length} entries to InfluxDB`);
+  logger.debug(`Wrote ${data.length} entries to InfluxDB`);
 };
