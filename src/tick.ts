@@ -1,9 +1,9 @@
 import logger from './logger';
-import * as nightscout from './clients/nightscout';
-import * as influxDB from './clients/influxdb'; // TODO: Create a barrel file that exports all client functions
+import NightscoutClient from './clients/nightscout';
+import * as influxDB from './clients/influxdb/metadata';
 
 // Max number of entries in a single tick
-const MAX_ENTRIES = 100_000;
+const MAX_ENTRIES = 10_000;
 
 export default async function onTick() {
   // Get date of the latest entry in InfluxDB
@@ -15,6 +15,7 @@ export default async function onTick() {
   while (moreData) {
     // Fetch 1 batch of data from Nightscout
     // TODO: Implement fetchDataSince in the nightscout client
+    const nightscout = await NightscoutClient.getInstance();
     const data = await nightscout.fetchDataSince(syncedUpTo);
     entriesFetched += data.length;
     syncedUpTo = data[data.length - 1].date;
