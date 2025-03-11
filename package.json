@@ -8,7 +8,7 @@
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "start": "bun src/nightflux.ts",
-    "dev": "bun --inspect-wait src/nightflux.ts",
+    "dev": "tsc && node --inspect dist/nightflux.js",
     "compile": "bun build --compile src/nightflux.ts",
     "prepare": "husky"
   },
