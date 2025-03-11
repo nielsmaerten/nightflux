@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  nightflux:
+    build: .
+    image: nightflux:latest
+    environment:
+      NIGHTFLUX_NIGHTSCOUT_URL: https://your-nightscout-instance.example.com
+      NIGHTFLUX_NIGHTSCOUT_TOKEN: your-nightscout-api-token
+      NIGHTFLUX_INFLUXDB_URL: http://localhost:8086
+      NIGHTFLUX_INFLUXDB_ORG: your-org-name
+      NIGHTFLUX_INFLUXDB_BUCKET: nightscout-data
+      NIGHTFLUX_INFLUXDB_TOKEN: your-influxdb-token
+      NIGHTFLUX_CRON_SCHEDULE: "0 * * * *"
+      NIGHTFLUX_RUN_ONCE: 1
+      # Find optional configuration options in .env.example
+    volumes:
+      - ./logs:/usr/src/app/logs
+    restart: no
