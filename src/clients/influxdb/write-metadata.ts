@@ -3,10 +3,10 @@ import InfluxClient from './influx-client';
 import config from '../../config';
 import logger from '../../utils/logger';
 
-const METADATA_MEASUREMENT = 'latest_entry';
+const METADATA_MEASUREMENT = 'metadata';
 const METADATA_FIELD = 'last_updated';
 
-const { influxDbOrg, influxDbBucket } = config;
+const { influxDbBucket } = config;
 
 export async function getLatestEntryDate(): Promise<Date> {
   const { queryApi } = InfluxClient.getInstance();
@@ -38,20 +38,14 @@ export async function getLatestEntryDate(): Promise<Date> {
 }
 
 export async function setLatestEntryDate(lastDate: Date): Promise<void> {
-  const metadata = {
-    _time: lastDate.toISOString(),
-    _measurement: METADATA_MEASUREMENT,
-    _field: METADATA_FIELD,
-  };
-
   try {
     // Write metadata to InfluxDB
     const { writeApi } = InfluxClient.getInstance();
 
     // Create a point for the metadata
-    const point = new Point(metadata._measurement)
-      .timestamp(lastDate)
-      .intField(metadata._field, lastDate.getTime());
+    const point = new Point(METADATA_MEASUREMENT)
+      .timestamp(0)
+      .intField(METADATA_FIELD, lastDate.getTime());
 
     // Write the point to InfluxDB
     writeApi.writePoint(point);
