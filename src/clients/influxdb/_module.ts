@@ -5,7 +5,7 @@ import InfluxClient from './influx-client';
 const InfluxDbClient = {
   getLatestEntryDate,
   setLatestEntryDate,
-  writeMeasurements: writePoints,
+  writePoints,
   flush: async () => {
     const client = InfluxClient.getInstance();
     await client.writeApi.flush();

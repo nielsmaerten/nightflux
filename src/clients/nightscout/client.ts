@@ -1,4 +1,5 @@
 import config from '../../config';
+import { mapEntry } from './mappers';
 import axios, { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 import { jwtDecode } from 'jwt-decode';
 import logger from '../../utils/logger';
@@ -74,20 +75,14 @@ export default class NightscoutClient {
         sort: 'date',
       },
     });
-    const { result } = response.data;
+
+    const isValid = response.data && response.data.result && Array.isArray(response.data.result);
+    if (!isValid) throw new Error('Invalid response from Nightscout', response.data);
+
+    const result = response.data.result as unknown[];
     logger.debug(`Fetched ${result.length} entries from Nightscout`);
 
     // Map results to a common format
-    return result.map();
+    return result.map(mapEntry);
   }
-}
-
-interface NightscoutDoc {
-  date: Date;
-}
-
-interface NightscoutEntry extends NightscoutDoc {
-  sgv: number;
-  direction: string;
-  type: 'glucose';
 }

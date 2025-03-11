@@ -27,7 +27,7 @@ export default async function onTick() {
     }
 
     // Write fetched data to InfluxDB
-    await InfluxDbClient.writeMeasurements(data);
+    await InfluxDbClient.writePoints(data);
     await InfluxDbClient.setLatestEntryDate(syncedUpTo);
 
     // Break if more than MAX_ENTRIES entries were fetched
