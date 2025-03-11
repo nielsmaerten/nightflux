@@ -1,5 +1,5 @@
 import config from '../../config';
-import logger from '../../logger';
+import logger from '../../utils/logger';
 import { InfluxDB, QueryApi, WriteApi } from '@influxdata/influxdb-client';
 
 const { influxDbOrg, influxDbToken, influxDbUrl, influxDbBucket } = config;

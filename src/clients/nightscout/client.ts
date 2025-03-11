@@ -1,7 +1,8 @@
-import config from '../config';
+import config from '../../config';
 import axios, { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 import { jwtDecode } from 'jwt-decode';
-import logger from '../logger';
+import logger from '../../utils/logger';
+import { NightfluxPoint } from '../influxdb/influx-types';
 
 const FETCH_LIMIT = 500;
 
@@ -58,13 +59,13 @@ export default class NightscoutClient {
     return jwt;
   }
 
-  public async fetchDataSince(date: Date, limit = FETCH_LIMIT): Promise<{ date: Date }[]> {
+  public async fetchDataSince(date: Date, limit = FETCH_LIMIT): Promise<NightfluxPoint[]> {
     // @TODO: Fetch other entries like carbs, bolus and basals
     const entries = await this.fetchEntriesSince(date, limit);
     return entries;
   }
 
-  private async fetchEntriesSince(date: Date, limit: number): Promise<NightscoutEntry[]> {
+  private async fetchEntriesSince(date: Date, limit: number): Promise<NightfluxPoint[]> {
     logger.info(`Fetching Nightscout entries since ${date.toISOString()}`);
     const response = await this.nightscoutClient.get('/api/v3/entries.json', {
       params: {
@@ -77,15 +78,7 @@ export default class NightscoutClient {
     logger.debug(`Fetched ${result.length} entries from Nightscout`);
 
     // Map results to a common format
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return result.map((entry: any) => {
-      return {
-        date: new Date(entry.date),
-        sgv: entry.sgv,
-        direction: entry.direction,
-        type: 'glucose',
-      };
-    });
+    return result.map();
   }
 }
 

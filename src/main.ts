@@ -1,6 +1,6 @@
 import config, { getAllEnvVars, loadConfig } from './config';
-import cronjob from './cronjob';
-import logger from './logger';
+import cronjob from './cron/job';
+import logger from './utils/logger';
 
 try {
   logger.info('Nightflux - Starting up...');

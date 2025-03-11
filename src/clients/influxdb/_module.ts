@@ -1,14 +1,11 @@
 import { getLatestEntryDate, setLatestEntryDate } from './write-metadata';
-import logger from '../../logger';
+import { writePoints } from './write-points';
 import InfluxClient from './influx-client';
 
 const InfluxDbClient = {
   getLatestEntryDate,
   setLatestEntryDate,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  writeMeasurements: async (_data: unknown) => {
-    logger.warn('InfluxDbClient.writeMeasurements() is not implemented');
-  },
+  writeMeasurements: writePoints,
   flush: async () => {
     const client = InfluxClient.getInstance();
     await client.writeApi.flush();

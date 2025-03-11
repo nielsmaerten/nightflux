@@ -1,7 +1,7 @@
 import { Point } from '@influxdata/influxdb-client';
 import InfluxClient from './influx-client';
 import config from '../../config';
-import logger from '../../logger';
+import logger from '../../utils/logger';
 
 const METADATA_MEASUREMENT = 'latest_entry';
 const METADATA_FIELD = 'last_updated';

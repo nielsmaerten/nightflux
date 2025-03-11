@@ -1,5 +1,5 @@
 import { CronJob } from 'cron';
-import config from './config';
+import config from '../config';
 import onTick from './tick';
 
 const job = CronJob.from(
