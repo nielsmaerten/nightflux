@@ -1,20 +1,28 @@
 import logger from './logger';
 
-const msg = 'Received SIGINT: Writing final data points and exiting...';
-
 process.on('SIGINT', () => {
-  logger.warn(msg);
   stop();
 });
 
 process.on('SIGTERM', () => {
-  logger.warn(msg);
   stop();
 });
 
 let stopReceived = false;
 export const isStopping = () => stopReceived;
+let isRunning = false;
+export const setIsRunning = (running: boolean) => {
+  isRunning = running;
+};
 
 export const stop = () => {
   stopReceived = true;
+  if (!isRunning) {
+    logger.warn('Exiting...');
+    process.exit(0);
+  }
+  else {
+    logger.warn('Job is currently running.');
+    logger.warn('Exiting after the current batch is done...');
+  }
 };

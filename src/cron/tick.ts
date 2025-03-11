@@ -1,5 +1,5 @@
 import logger from '../utils/logger';
-import { isStopping } from '../utils/interrupt';
+import { isStopping, setIsRunning } from '../utils/interrupt';
 import NightscoutClient from '../clients/nightscout/client';
 import InfluxDbClient from '../clients/influxdb/_module';
 import config from '../config';
@@ -8,6 +8,7 @@ import config from '../config';
 const MAX_ENTRIES = config.limit || 10_000;
 
 export default async function onTick() {
+  setIsRunning(true);
   // Get date of the latest entry in InfluxDB
   let syncedUpTo = await InfluxDbClient.getLatestEntryDate();
   let moreData = true;
@@ -54,4 +55,9 @@ export default async function onTick() {
     await InfluxDbClient.close();
     process.exit(0);
   }
+  setIsRunning(false);
+
+  // Up next is publishing on the registry
+  // Letting it pull my own data
+  // And of course getting boluses, carbs, etc
 }
