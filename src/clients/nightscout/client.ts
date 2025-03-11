@@ -83,6 +83,6 @@ export default class NightscoutClient {
     logger.debug(`Fetched ${result.length} entries from Nightscout`);
 
     // Map results to a common format
-    return result.map(mapEntry);
+    return result.map(mapEntry).filter(e => e !== null);
   }
 }

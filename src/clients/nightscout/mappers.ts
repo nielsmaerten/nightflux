@@ -1,7 +1,9 @@
 import { NightfluxPoint } from '../influxdb/influx-types';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function mapEntry(e: any): NightfluxPoint {
+export function mapEntry(e: any): NightfluxPoint | null {
+  const allowedTypes = ['sgv', 'mbg'];
+  if (!allowedTypes.includes(e.type)) return null;
   return {
     measurement: 'glucose',
     date: new Date(e.date || e.dateString),
@@ -12,8 +14,9 @@ export function mapEntry(e: any): NightfluxPoint {
     },
     fields: {
       glucose: e[e.type],
-      delta: e.delta,
+      delta: e.delta || 0,
     },
     type: 'float',
+    source: JSON.stringify(e),
   };
 }

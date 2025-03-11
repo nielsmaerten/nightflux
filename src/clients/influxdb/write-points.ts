@@ -8,36 +8,42 @@ export async function writePoints(data: NightfluxPoint[]) {
 
   // Write each entry as a point to InfluxDB
   for (const entry of data) {
-    // Create a point for the entry
-    const point = new Point(entry.measurement)
-      .timestamp(entry.date);
+    try {
+      // Create a point for the entry
+      const point = new Point(entry.measurement)
+        .timestamp(entry.date);
 
-    // Add tags to the point
-    for (const [key, value] of Object.entries(entry.tags)) {
-      point.tag(key, value);
-    }
-
-    // Add fields to the point
-    for (const [key, value] of Object.entries(entry.fields)) {
-      switch (entry.type) {
-        case 'float':
-          point.floatField(key, value);
-          break;
-        case 'int':
-          point.intField(key, value);
-          break;
-        case 'string':
-          point.stringField(key, value);
-          break;
-        case 'boolean':
-          point.booleanField(key, value);
-          break;
+      // Add tags to the point
+      for (const [key, value] of Object.entries(entry.tags)) {
+        point.tag(key, value);
       }
+
+      // Add fields to the point
+      for (const [key, value] of Object.entries(entry.fields)) {
+        switch (entry.type) {
+          case 'float':
+            point.floatField(key, value);
+            break;
+          case 'int':
+            point.intField(key, value);
+            break;
+          case 'string':
+            point.stringField(key, value);
+            break;
+          case 'boolean':
+            point.booleanField(key, value);
+            break;
+        }
+      }
+
+      logger.debug(`==> ${point.toLineProtocol()}`);
+
+      writeApi.writePoint(point);
     }
-
-    logger.debug(`==> ${point.toLineProtocol()}`);
-
-    writeApi.writePoint(point);
+    catch (error) {
+      const msg = (error as Error).message || 'Unknown error';
+      logger.error(`Failed to write point to InfluxDB`, { error: msg, entry });
+    }
   }
 
   logger.info(`Wrote ${data.length} entries to InfluxDB`);
