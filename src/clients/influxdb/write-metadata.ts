@@ -46,8 +46,7 @@ export async function setLatestEntryDate(lastDate: Date): Promise<void> {
 
   try {
     // Write metadata to InfluxDB
-    const { influxDB } = InfluxClient.getInstance();
-    const writeApi = influxDB.getWriteApi(influxDbOrg, influxDbBucket);
+    const { writeApi } = InfluxClient.getInstance();
 
     // Create a point for the metadata
     const point = new Point(metadata._measurement)
@@ -56,10 +55,6 @@ export async function setLatestEntryDate(lastDate: Date): Promise<void> {
 
     // Write the point to InfluxDB
     writeApi.writePoint(point);
-
-    // Flush and close the write API
-    await writeApi.flush();
-    await writeApi.close();
 
     logger.info(`Updated metadata with latest entry date: ${lastDate.toISOString()}`);
   }

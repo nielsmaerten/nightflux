@@ -1,6 +1,7 @@
 import logger from './logger';
+import { isStopping } from './interrupt';
 import NightscoutClient from './clients/nightscout';
-import InfluxDbClient from './clients/influxdb/module';
+import InfluxDbClient from './clients/influxdb/_module';
 
 // Max number of entries in a single tick
 const MAX_ENTRIES = 1_000;
@@ -26,7 +27,7 @@ export default async function onTick() {
     }
 
     // Write fetched data to InfluxDB
-    // TODO: Write the entries to InfluxDB
+    await InfluxDbClient.writeMeasurements(data);
     await InfluxDbClient.setLatestEntryDate(syncedUpTo);
 
     // Break if more than MAX_ENTRIES entries were fetched
@@ -35,5 +36,17 @@ export default async function onTick() {
       moreData = false;
       break;
     }
+
+    // Check if we should stop early
+    if (isStopping()) break;
+  }
+
+  // The loop is done, flush the write API
+  await InfluxDbClient.flush();
+
+  // If we received a stop signal, close the InfluxDB client and exit
+  if (isStopping()) {
+    await InfluxDbClient.close();
+    process.exit(0);
   }
 }

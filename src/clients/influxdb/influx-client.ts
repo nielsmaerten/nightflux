@@ -1,18 +1,20 @@
 import config from '../../config';
 import logger from '../../logger';
-import { InfluxDB, QueryApi } from '@influxdata/influxdb-client';
+import { InfluxDB, QueryApi, WriteApi } from '@influxdata/influxdb-client';
 
-const { influxDbOrg, influxDbToken, influxDbUrl } = config;
+const { influxDbOrg, influxDbToken, influxDbUrl, influxDbBucket } = config;
 
 export default class InfluxClient {
   private static instance: InfluxClient;
   public influxDB: InfluxDB;
   public queryApi: QueryApi;
+  public writeApi: WriteApi;
 
   private constructor() {
     logger.info('Initializing InfluxDB client');
     this.influxDB = new InfluxDB({ url: influxDbUrl, token: influxDbToken });
     this.queryApi = this.influxDB.getQueryApi(influxDbOrg);
+    this.writeApi = this.influxDB.getWriteApi(influxDbOrg, influxDbBucket);
 
     if (!this.influxDB || !this.queryApi) {
       throw new Error('Failed to initialize InfluxDB client');
