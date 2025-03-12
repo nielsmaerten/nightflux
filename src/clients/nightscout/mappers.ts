@@ -7,16 +7,11 @@ export function mapEntry(e: any): NightfluxPoint[] {
   return [{
     measurement: 'glucose',
     date: new Date(e.date || e.dateString),
-    tags: {
-      device: e.device,
-      direction: e.direction,
-      type: e.type,
-    },
+    tags: {},
     fields: {
-      glucose: e[e.type],
-      delta: e.delta || 0,
+      glucose: ['float', e.sgv || e.mbg],
+      direction: ['string', e.direction],
     },
-    type: 'float',
     source: JSON.stringify(e),
   }];
 }
@@ -26,19 +21,32 @@ export function mapEntry(e: any): NightfluxPoint[] {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function mapTreatment(e: any): NightfluxPoint[] {
   const points: NightfluxPoint[] = [];
-  const insulin = e.insulin || 0;
-  if (insulin) points.push({
-    measurement: 'insulin',
+
+  if (e.insulin) {
+    const isSMB = e.type === 'SMB' || e.isSMB === true;
+    points.push({
+      measurement: 'insulin',
+      date: new Date(e.created_at),
+      tags: {},
+      fields: {
+        insulin: ['float', e.insulin],
+        isSMB: ['boolean', isSMB],
+        type: ['string', e.type || 'N/A'],
+        eventType: ['string', e.eventType || 'N/A'],
+      },
+      source: JSON.stringify(e),
+    });
+  }
+
+  if (e.carbs) points.push({
+    measurement: 'carbs',
     date: new Date(e.created_at),
-    tags: {
-      eventType: e.eventType || 'N/A',
-      type: e.type || 'N/A',
-      isSMB: e.isSMB ? 'true' : 'false',
-    },
+    tags: {},
     fields: {
-      insulin,
+      carbs: ['int', e.carbs],
+      eventType: ['string', e.eventType || 'N/A'],
+      type: ['string', e.type || 'N/A'],
     },
-    type: 'float',
     source: JSON.stringify(e),
   });
   return points;

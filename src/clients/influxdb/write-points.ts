@@ -19,19 +19,20 @@ export async function writePoints(data: NightfluxPoint[]) {
       }
 
       // Add fields to the point
-      for (const [key, value] of Object.entries(entry.fields)) {
-        switch (entry.type) {
+      for (const [key, field] of Object.entries(entry.fields)) {
+        const [fieldType, fieldValue] = field;
+        switch (fieldType) {
           case 'float':
-            point.floatField(key, value);
+            point.floatField(key, fieldValue);
             break;
           case 'int':
-            point.intField(key, value);
+            point.intField(key, fieldValue);
             break;
           case 'string':
-            point.stringField(key, value);
+            point.stringField(key, fieldValue);
             break;
           case 'boolean':
-            point.booleanField(key, value);
+            point.booleanField(key, fieldValue);
             break;
         }
       }

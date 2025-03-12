@@ -10,7 +10,7 @@ Nightflux currently supports importing the following Nightscout events:
 - [x] Glucose values
 - [ ] Carb entries
 - [ ] Temporary basal rates
-- [ ] Insulin boluses
+- [x] Insulin boluses
 
 More event types may be added in the future.
 

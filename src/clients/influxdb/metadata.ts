@@ -11,6 +11,12 @@ const { influxDbBucket } = config;
 export async function getLastRecordDate(recordType: string): Promise<Date> {
   const { queryApi } = InfluxClient.getInstance();
 
+  const override = process.argv.indexOf('--start-from') > -1;
+  if (override) {
+    const startFrom = process.argv[process.argv.indexOf('--start-from') + 1];
+    return new Date(startFrom);
+  }
+
   try {
     // Flux query to get the latest entry date from metadata
     const query = `
