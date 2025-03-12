@@ -8,9 +8,9 @@ It can be run as a standalone binary or using Docker.
 Nightflux currently supports importing the following Nightscout events:
 
 - [x] Glucose values
-- [ ] Carb entries
-- [ ] Temporary basal rates
+- [x] Carb entries
 - [x] Insulin boluses
+- [ ] Basal rates
 
 More event types may be added in the future.
 
@@ -19,7 +19,7 @@ More event types may be added in the future.
 ### Option 1: Standalone
 
 1. Download the latest release from [GitHub](https://github.com/nielsmaerten/nightflux/releases).
-2. Configure environment variables (see [Configuration](https://github.com/nielsmaerten/nightflux/edit/main/README.md#configuration)).
+2. Configure environment variables (see [Configuration](https://github.com/nielsmaerten/nightflux/#configuration)).
 3. Run it
    ```bash
    chmod +x nightflux
@@ -28,13 +28,8 @@ More event types may be added in the future.
 
 ### Option 2: Docker Compose
 
-Note: Nightflux hasn't been published on a container registry yet. It will once it's stable.
-
-1. Clone the git repository:
-   ```bash
-   git clone https://https://github.com/nielsmaerten/nightflux
-   ```
-2. Edit the `docker-compose.yml` file to match your setup.
+1. Copy the [`docker-compose.yml`](https://github.com/nielsmaerten/nightflux/blob/main/docker-compose.yml) file.
+2. Edit the environment variables to match your setup.
 4. Start the container:
    ```bash
    docker-compose up -d
