@@ -1,7 +1,7 @@
 # Nightflux
 
-**Nightflux** is a lightweight tool that imports events from **Nightscout** into **InfluxDB** on a schedule you define.  
-It can be run as a standalone binary or using Docker Compose for easy deployment.
+**Nightflux** is a lightweight tool that imports events from **Nightscout** into **InfluxDB**.  
+It can be run as a standalone binary or using Docker.
 
 ## Supported Events
 
@@ -16,20 +16,26 @@ More event types may be added in the future.
 
 ## Installation
 
-### Option 1: Binary
+### Option 1: Standalone
 
-1. Download the latest release from [GitHub](https://github.com/yourusername/nightflux/releases).
-2. Set up environment variables (see **Configuration**).
-3. Add a cron job to execute Nightflux on your desired schedule:
+1. Download the latest release from [GitHub](https://github.com/nielsmaerten/nightflux/releases).
+2. Configure environment variables (see [Configuration](https://github.com/nielsmaerten/nightflux/edit/main/README.md#configuration)).
+3. Run it
    ```bash
-   0 * * * * /path/to/nightflux
+   chmod +x nightflux
+   ./nightflux
    ```
 
 ### Option 2: Docker Compose
 
-1. Download the `docker-compose.yml` file (see below).
-2. Update the environment variables to match your setup.
-3. Start the container:
+Note: Nightflux hasn't been published on a container registry yet. It will once it's stable.
+
+1. Clone the git repository:
+   ```bash
+   git clone https://https://github.com/nielsmaerten/nightflux
+   ```
+2. Edit the `docker-compose.yml` file to match your setup.
+4. Start the container:
    ```bash
    docker-compose up -d
    ```
