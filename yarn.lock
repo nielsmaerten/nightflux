@@ -110,6 +110,11 @@
   resolved "https://registry.yarnpkg.com/@humanwhocodes/retry/-/retry-0.4.2.tgz#1860473de7dfa1546767448f333db80cb0ff2161"
   integrity sha512-xeO57FpIu4p1Ri3Jq/EXq4ClRm86dVF2z/+kvFnyqVYRavTZmaFaUBbWCOuuTh0o/g7DSsk6kc2vrS4Vl5oPOQ==
 
+"@influxdata/influxdb-client-apis@^1.35.0":
+  version "1.35.0"
+  resolved "https://registry.yarnpkg.com/@influxdata/influxdb-client-apis/-/influxdb-client-apis-1.35.0.tgz#ca8e9dd6b0532e780e8b5aea69ee18f05e5ef9d0"
+  integrity sha512-+7h6smVPHYBge2rNKgYh/5k+SriYvPMsoJDfbUiQt1vJtpWnElwgBDLDl7Cr6d9XPC+FCI9GP4GQEMv7y8WxdA==
+
 "@influxdata/influxdb-client@^1.35.0":
   version "1.35.0"
   resolved "https://registry.yarnpkg.com/@influxdata/influxdb-client/-/influxdb-client-1.35.0.tgz#74a3eadb034d9ed9997d7a0b29a837d68d548b1e"

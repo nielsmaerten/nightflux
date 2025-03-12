@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@influxdata/influxdb-client": "^1.35.0",
+    "@influxdata/influxdb-client-apis": "^1.35.0",
     "axios": "^1.8.2",
     "cron": "^4.1.0",
     "dotenv": "^16.4.7",
@@ -28,7 +29,7 @@
     "globals": "^15.15.0",
     "husky": "^9.1.7",
     "lint-staged": "^15.4.3",
-    "typescript-eslint": "^8.24.1",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.24.1"
   }
 }
