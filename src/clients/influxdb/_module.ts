@@ -14,6 +14,10 @@ const InfluxDbClient = {
     const client = InfluxClient.getInstance();
     await client.writeApi.close();
   },
+  DANGEROUS_CLEAR_BUCKET: async () => {
+    const client = InfluxClient.getInstance();
+    await client.clearBucket();
+  },
 };
 
 export default InfluxDbClient;

@@ -4,29 +4,35 @@ import NightscoutClient from '../clients/nightscout/client';
 import InfluxDbClient from '../clients/influxdb/_module';
 import config from '../config';
 
-// Max number of entries in a single tick
 const MAX_ENTRIES = config.limit || 10_000;
+const nightscout = NightscoutClient.getInstance();
 
 export default async function onTick() {
+  // If the --dangerous-clear-db flag is passed, clear the InfluxDB bucket and exit
+  if (process.argv.includes('--dangerous-clear-db')) {
+    await InfluxDbClient.DANGEROUS_CLEAR_BUCKET();
+    process.exit(0);
+  }
   setIsRunning(true);
+
   // Get date of the latest entry in InfluxDB
   let syncedUpTo = await InfluxDbClient.getLatestEntryDate();
-  let moreData = true;
   let entriesFetched = 0;
 
-  // Loop until there is no more data to fetch
-  while (moreData) {
-    // Fetch 1 batch of data from Nightscout
-    const nightscout = await NightscoutClient.getInstance();
+  // Loop until a break condition is met
+  while (true) {
+    // Fetch a batch of data from Nightscout
     const data = await nightscout.fetchDataSince(syncedUpTo);
     entriesFetched += data.length;
-    syncedUpTo = data[data.length - 1].date;
 
-    // Break if less than 2 entries were fetched (prevents infinite loop)
-    if (data.length <= 1) {
-      moreData = false;
-      break;
-    }
+    // Break if no data was fetched
+    if (data.length === 0) break;
+
+    // Break if no new data was fetched:
+    // The last entry fetched should be the same as the last entry in InfluxDB
+    const lastEntryDate = data[data.length - 1].date;
+    if (lastEntryDate <= syncedUpTo) break;
+    else syncedUpTo = lastEntryDate;
 
     // Write fetched data to InfluxDB
     await InfluxDbClient.writePoints(data);
@@ -38,7 +44,6 @@ export default async function onTick() {
     // Break if more than MAX_ENTRIES entries were fetched
     if (entriesFetched > MAX_ENTRIES) {
       logger.warn(`Fetched more than ${MAX_ENTRIES} entries, deferring until next tick`);
-      moreData = false;
       break;
     }
 
