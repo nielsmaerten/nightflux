@@ -1,10 +1,10 @@
-import { getLatestEntryDate, setLatestEntryDate } from './write-metadata';
+import { getLastRecordDate, setLastRecordDate } from './metadata';
 import { writePoints } from './write-points';
 import InfluxClient from './influx-client';
 
 const InfluxDbClient = {
-  getLatestEntryDate,
-  setLatestEntryDate,
+  getLastRecordDate,
+  setLastRecordDate,
   writePoints,
   flush: async () => {
     const client = InfluxClient.getInstance();

@@ -4,24 +4,24 @@ import config from '../../config';
 import logger from '../../utils/logger';
 
 const METADATA_MEASUREMENT = 'metadata';
-const METADATA_FIELD = 'last_updated';
+const FIELD_NAME = 'latestRecord';
 
 const { influxDbBucket } = config;
 
-export async function getLatestEntryDate(): Promise<Date> {
+export async function getLastRecordDate(recordType: string): Promise<Date> {
   const { queryApi } = InfluxClient.getInstance();
 
   try {
     // Flux query to get the latest entry date from metadata
     const query = `
       from(bucket: "${influxDbBucket}")
-        |> range(start: 0)
-        |> filter(fn: (r) => r._measurement == "${METADATA_MEASUREMENT}" and r._field == "${METADATA_FIELD}")
-        |> last()
+      |> range(start: 0)
+      |> filter(fn: (r) => r._measurement == "${METADATA_MEASUREMENT}" and r.recordType == "${recordType}")
+      |> last()
     `;
 
     // Execute query and get the result
-    const result = await queryApi.collectRows<{ _time: string; _value: number }>(query);
+    const result = await queryApi.collectRows<{ _value: number }>(query);
 
     // If we have a result, return the timestamp
     if (result && result.length > 0) {
@@ -37,7 +37,7 @@ export async function getLatestEntryDate(): Promise<Date> {
   }
 }
 
-export async function setLatestEntryDate(lastDate: Date): Promise<void> {
+export async function setLastRecordDate(recordType: string, lastDate: Date): Promise<void> {
   try {
     // Write metadata to InfluxDB
     const { writeApi } = InfluxClient.getInstance();
@@ -45,7 +45,8 @@ export async function setLatestEntryDate(lastDate: Date): Promise<void> {
     // Create a point for the metadata
     const point = new Point(METADATA_MEASUREMENT)
       .timestamp(0)
-      .intField(METADATA_FIELD, lastDate.getTime());
+      .tag('recordType', recordType)
+      .intField(FIELD_NAME, lastDate.getTime());
 
     // Write the point to InfluxDB
     writeApi.writePoint(point);

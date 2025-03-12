@@ -60,14 +60,16 @@ export default class NightscoutClient {
     return jwt;
   }
 
-  public async fetchDataSince(date: Date, limit = FETCH_LIMIT): Promise<NightfluxPoint[]> {
-    logger.debug(`Fetching Nightscout data since ${date.toISOString()}`);
-    const treatments = await this.fetchTreatmentsSince(date, limit);
-    const entries = await this.fetchEntriesSince(date, limit);
-
-    // Combine and sort the results
-    const byDate = (a: NightfluxPoint, b: NightfluxPoint) => a.date.getTime() - b.date.getTime();
-    return [...treatments, ...entries].sort(byDate);
+  public async fetchRecordsSince(recordType: string, date: Date, limit = FETCH_LIMIT): Promise<NightfluxPoint[]> {
+    logger.debug(`Fetching Nightscout ${recordType} since ${date.toISOString()}`);
+    switch (recordType) {
+      case 'treatments':
+        return this.fetchTreatmentsSince(date, limit);
+      case 'entries':
+        return this.fetchEntriesSince(date, limit);
+      default:
+        throw new Error(`Invalid record type: ${recordType}`);
+    }
   }
 
   private async fetchEntriesSince(date: Date, limit: number): Promise<NightfluxPoint[]> {
