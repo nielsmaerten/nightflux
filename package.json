@@ -10,7 +10,7 @@
     "start": "bun src/nightflux.ts",
     "dev": "tsc && node --inspect dist/nightflux.js",
     "compile": "bun build --compile src/nightflux.ts",
-    "prepare": "husky"
+    "prepare": "husky || true"
   },
   "dependencies": {
     "@influxdata/influxdb-client": "^1.35.0",
