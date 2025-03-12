@@ -31,7 +31,10 @@ export default async function onTick() {
     // Break if no new data was fetched:
     // The last entry fetched should be the same as the last entry in InfluxDB
     const lastEntryDate = data[data.length - 1].date;
-    if (lastEntryDate <= syncedUpTo) break;
+    if (lastEntryDate <= syncedUpTo) {
+      logger.info('Nightscout and InfluxDB are in sync');
+      break;
+    }
     else syncedUpTo = lastEntryDate;
 
     // Write fetched data to InfluxDB

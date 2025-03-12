@@ -1,5 +1,5 @@
 import config from '../../config';
-import { mapEntry } from './mappers';
+import { mapEntry, mapTreatment } from './mappers';
 import axios, { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 import { jwtDecode } from 'jwt-decode';
 import logger from '../../utils/logger';
@@ -43,7 +43,7 @@ export default class NightscoutClient {
     this.nightscoutClient.interceptors.request.use(checkJwt);
   }
 
-  public static async getInstance(): Promise<NightscoutClient> {
+  public static getInstance(): NightscoutClient {
     if (!NightscoutClient.instance) NightscoutClient.instance = new NightscoutClient();
     return NightscoutClient.instance;
   }
@@ -62,11 +62,16 @@ export default class NightscoutClient {
 
   public async fetchDataSince(date: Date, limit = FETCH_LIMIT): Promise<NightfluxPoint[]> {
     logger.debug(`Fetching Nightscout data since ${date.toISOString()}`);
+    const treatments = await this.fetchTreatmentsSince(date, limit);
     const entries = await this.fetchEntriesSince(date, limit);
-    return entries;
+
+    // Combine and sort the results
+    const byDate = (a: NightfluxPoint, b: NightfluxPoint) => a.date.getTime() - b.date.getTime();
+    return [...treatments, ...entries].sort(byDate);
   }
 
   private async fetchEntriesSince(date: Date, limit: number): Promise<NightfluxPoint[]> {
+    // Entries use 'date' instead of 'created_at'!
     const response = await this.nightscoutClient.get('/api/v3/entries.json', {
       params: {
         limit,
@@ -79,9 +84,28 @@ export default class NightscoutClient {
     if (!isValid) throw new Error('Invalid response from Nightscout', response.data);
 
     const result = response.data.result as unknown[];
-    logger.debug(`Fetched ${result.length} entries from Nightscout`);
 
     // Map results to a common format
-    return result.map(mapEntry).filter(e => e !== null);
+    return result.map(mapEntry).flat();
+  }
+
+  private async fetchTreatmentsSince(date: Date, limit: number): Promise<NightfluxPoint[]> {
+    // Treatments use 'created_at' instead of 'date'!
+    const response = await this.nightscoutClient.get('/api/v3/treatments.json', {
+      params: {
+        limit,
+        created_at$gte: date.toISOString(),
+        sort: 'created_at',
+      },
+    });
+
+    const isValid = response.data && response.data.result && Array.isArray(response.data.result);
+    if (!isValid) throw new Error('Invalid response from Nightscout', response.data);
+
+    const result = response.data.result as unknown[];
+    logger.debug(`Fetched ${result.length} treatments from Nightscout`);
+
+    // Map results to a common format
+    return result.map(mapTreatment).flat();
   }
 }
