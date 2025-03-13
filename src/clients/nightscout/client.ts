@@ -5,7 +5,7 @@ import { jwtDecode } from 'jwt-decode';
 import logger from '../../utils/logger';
 import { NightfluxPoint } from '../influxdb/influx-types';
 
-const FETCH_LIMIT = 200;
+const FETCH_LIMIT = 1000;
 
 export default class NightscoutClient {
   private static instance: NightscoutClient | null = null;
