@@ -9,7 +9,10 @@ const nightscout = NightscoutClient.getInstance();
 
 export default async function onTick(): Promise<void> {
   setIsRunning(true);
-  const collections = ['treatments', 'entries'];
+  const collections = [
+    'treatments',
+    // 'entries'
+  ];
   for (const collection of collections) {
     await syncCollecction(collection);
   }
@@ -40,13 +43,16 @@ export async function syncCollecction(recordType: string): Promise<void> {
     const filtered = unfiltered.filter((entry) => {
       if (entry.date < recordCursor.date) return false;
       if (recordCursor._id) {
-        if (entry._id < recordCursor._id) return false;
+        if (entry._id <= recordCursor._id) return false;
       }
       return true;
     });
 
     // Break if no data was fetched
-    if (filtered.length === 0) break;
+    if (filtered.length === 0) {
+      logger.info(`No new ${recordType}-records to fetch. The last record was: ${recordCursor._id}`);
+      break;
+    }
 
     // Update the cursor
     recordCursor.date = filtered[filtered.length - 1].date;
