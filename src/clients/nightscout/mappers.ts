@@ -5,6 +5,7 @@ export function mapEntry(e: any): NightfluxPoint[] {
   const allowedTypes = ['sgv', 'mbg'];
   if (!allowedTypes.includes(e.type)) return [];
   return [{
+    _id: e.identifier,
     measurement: 'glucose',
     date: new Date(e.date || e.dateString),
     tags: {},
@@ -25,6 +26,7 @@ export function mapTreatment(e: any): NightfluxPoint[] {
   if (e.insulin) {
     const isSMB = e.type === 'SMB' || e.isSMB === true;
     points.push({
+      _id: e.identifier,
       measurement: 'insulin',
       date: new Date(e.created_at),
       tags: {},
@@ -39,6 +41,7 @@ export function mapTreatment(e: any): NightfluxPoint[] {
   }
 
   if (e.carbs) points.push({
+    _id: e.identifier,
     measurement: 'carbs',
     date: new Date(e.created_at),
     tags: {},

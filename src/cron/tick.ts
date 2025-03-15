@@ -23,32 +23,38 @@ export async function syncCollecction(recordType: string): Promise<void> {
     process.exit(0);
   }
 
-  // Get date of the latest entry in InfluxDB
-  let syncedUpTo = await InfluxDbClient.getLastRecordDate(recordType);
+  // Initialize the record cursor
+  const recordCursor = {
+    _id: '',
+    date: await InfluxDbClient.getLastRecordDate(recordType),
+  };
   let entriesFetched = 0;
 
   // Loop until a break condition is met
   while (true) {
-    // Fetch a batch of data from Nightscout
-    const data = await nightscout.fetchRecordsSince(recordType, syncedUpTo);
-    entriesFetched += data.length;
+    // Fetch records >= recordCursor.date
+    const unfiltered = await nightscout.fetchRecordsSince(recordType, recordCursor.date);
+    entriesFetched += unfiltered.length;
+
+    // Discard records that were already fetched
+    const filtered = unfiltered.filter((entry) => {
+      if (entry.date < recordCursor.date) return false;
+      if (recordCursor._id) {
+        if (entry._id < recordCursor._id) return false;
+      }
+      return true;
+    });
 
     // Break if no data was fetched
-    if (data.length === 0) break;
+    if (filtered.length === 0) break;
 
-    // Break if no new data was fetched:
-    // The last entry fetched should be the same as the last entry in InfluxDB
-    const lastEntryDate = data[data.length - 1].date;
-    if (lastEntryDate <= syncedUpTo) {
-      logger.info(`Sync of "${recordType}" is up to date`);
-      break;
-    }
-    // Move the cursor to the last entry fetched
-    else syncedUpTo = lastEntryDate;
+    // Update the cursor
+    recordCursor.date = filtered[filtered.length - 1].date;
+    recordCursor._id = filtered[filtered.length - 1]._id;
 
     // Write fetched data to InfluxDB
-    await InfluxDbClient.writePoints(data);
-    await InfluxDbClient.setLastRecordDate(recordType, syncedUpTo);
+    await InfluxDbClient.writePoints(filtered);
+    await InfluxDbClient.setLastRecordDate(recordType, recordCursor.date);
 
     // Check if we should stop early
     if (isStopping()) break;
@@ -61,7 +67,7 @@ export async function syncCollecction(recordType: string): Promise<void> {
 
     // Log progress
     const paddedTotal = String(entriesFetched).padStart(6, ' ');
-    logger.info(`Fetched ${paddedTotal} ${recordType}-records, synced up to ${syncedUpTo.toISOString()}`);
+    logger.info(`Fetched ${paddedTotal} ${recordType}-records, synced up to ${recordCursor.date.toISOString()}`);
   }
 
   // The loop is done, flush the write API

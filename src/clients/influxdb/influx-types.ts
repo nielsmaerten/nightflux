@@ -5,6 +5,7 @@ export type InfluxField =
   ['boolean', boolean];
 
 export type NightfluxPoint = {
+  _id: string;
   measurement: string;
   date: Date;
   tags: { [key: string]: string };
