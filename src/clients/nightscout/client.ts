@@ -64,9 +64,9 @@ export default class NightscoutClient {
     logger.debug(`Fetching Nightscout ${recordType} since ${date.toISOString()}`);
     switch (recordType) {
       case 'treatments':
-        return this.fetchTreatmentsSince(date, limit);
+        return await this.fetchTreatmentsSince(date, limit).then(sortByDate);
       case 'entries':
-        return this.fetchEntriesSince(date, limit);
+        return await this.fetchEntriesSince(date, limit).then(sortByDate);
       default:
         throw new Error(`Invalid record type: ${recordType}`);
     }
@@ -110,4 +110,8 @@ export default class NightscoutClient {
     // Map results to a common format
     return result.map(mapTreatment).flat();
   }
+}
+
+function sortByDate(records: NightfluxPoint[]) {
+  return records.sort((a, b) => a.date.getTime() - b.date.getTime());
 }
