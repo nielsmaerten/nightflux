@@ -52,5 +52,22 @@ export function mapTreatment(e: any): NightfluxPoint[] {
     },
     source: JSON.stringify(e),
   });
+
+  if (!e.carbs && !e.insulin) {
+    // This point is not useful,
+    // but we need to return something
+    // so the cursor can be updated
+    points.push({
+      _id: e.identifier,
+      measurement: '', // Empty measurement to avoid writing to InfluxDB
+      date: new Date(e.created_at),
+      tags: {},
+      fields: {
+        eventType: ['string', e.eventType || 'N/A'],
+        type: ['string', e.type || 'N/A'],
+      },
+      source: JSON.stringify(e),
+    });
+  }
   return points;
 }
