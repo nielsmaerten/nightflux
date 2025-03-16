@@ -58,6 +58,14 @@ Nightflux reads configuration values from environment variables. If a `.env` fil
 
 Refer to `.env.example` for additional options.
 
+### Advanced flags
+These can be passed directly in the command line:
+| Flag                         | Description                                                       | Usage Example             |
+|------------------------------|-------------------------------------------------------------------|---------------------------|
+| `--dangerous-clear-db`       | Clears the bucket before importing new events. Use with caution! | --dangerous-clear-db      |
+| `--start-from YYYY-MM-DD`      | Imports events starting from the specified date.                  | --start-from 2023-01-01    |
+| `--only treatments\|entries`    | Filters the import to either treatments or entries only.          | --only treatments         |
+
 ## Example `docker-compose.yml`
 
 ```yaml

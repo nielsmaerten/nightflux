@@ -4,15 +4,13 @@ import NightscoutClient from '../clients/nightscout/client';
 import InfluxDbClient from '../clients/influxdb/_module';
 import config from '../config';
 
-const MAX_ENTRIES = config.limit || 10_000;
+const JOB_LIMIT = config.limit || 20_000;
+const FETCH_LIMIT = 1000;
 const nightscout = NightscoutClient.getInstance();
 
 export default async function onTick(): Promise<void> {
   setIsRunning(true);
-  const collections = [
-    'treatments',
-    // 'entries'
-  ];
+  const collections = getCollections();
   for (const collection of collections) {
     await syncCollecction(collection);
   }
@@ -31,48 +29,60 @@ export async function syncCollecction(recordType: string): Promise<void> {
     _id: '',
     date: await InfluxDbClient.getLastRecordDate(recordType),
   };
-  let entriesFetched = 0;
+  let totalRecordsFetched = 0;
 
   // Loop until a break condition is met
   while (true) {
-    // Fetch records >= recordCursor.date
-    const unfiltered = await nightscout.fetchRecordsSince(recordType, recordCursor.date);
-    entriesFetched += unfiltered.length;
-
-    // Discard records that were already fetched
-    const filtered = unfiltered.filter((entry) => {
-      if (entry.date < recordCursor.date) return false;
-      if (recordCursor._id) {
-        if (entry._id <= recordCursor._id) return false;
-      }
-      return true;
-    });
-
-    // Break if no data was fetched
-    if (filtered.length === 0) {
-      logger.info(`No new ${recordType}-records to fetch. The last record was: ${recordCursor._id}`);
-      break;
-    }
-
-    // Update the cursor
-    recordCursor.date = filtered[filtered.length - 1].date;
-    recordCursor._id = filtered[filtered.length - 1]._id;
-
-    // Write fetched data to InfluxDB
-    await InfluxDbClient.writePoints(filtered);
-    await InfluxDbClient.setLastRecordDate(recordType, recordCursor.date);
-
     // Check if we should stop early
     if (isStopping()) break;
 
+    // Fetch records >= recordCursor.date
+    const incomingRecords = await nightscout.fetchRecordsSince(recordType, recordCursor.date, FETCH_LIMIT);
+    totalRecordsFetched += incomingRecords.length;
+
+    // If no records were fetched, we're done
+    if (incomingRecords.length === 0) break;
+
+    // Get the latest record fetched
+    const latestRecord = incomingRecords[incomingRecords.length - 1];
+    const oldestRecord = incomingRecords[0];
+
+    // Verify new records were fetched by comparing the latest record's date to the cursor
+    const newRecordsFound = oldestRecord.date.getTime() !== latestRecord.date.getTime();
+
+    if (newRecordsFound) {
+      // If the cursor has advanced, set it to the latest record fetched: all good.
+      recordCursor._id = latestRecord._id;
+      recordCursor.date = latestRecord.date;
+    }
+    else {
+      // This ordinarily shouldn't happen, but if it does, move the cursor forward by 1s
+      // It means that over the entire fetch, all records had the same timestamp?
+      logger.warn(`No new records? Moving cursor forward by 1s: ${recordCursor.date.toISOString()}`);
+      if (incomingRecords.length >= FETCH_LIMIT / 2) {
+        // If we get here, the database almost certainly has an issue with duplicate records
+        // We can work around this, but should warn the user
+        logger.warn(`Warning: ${FETCH_LIMIT / 2} or more records share the same timestamp.`);
+        logger.warn(`This is likely due to duplicate records in the Nightscout database.`);
+        logger.warn(`Nightflux can continue, but you should investigate this.`);
+        logger.warn(`Timestamp: ${recordCursor.date.toISOString()}`);
+      }
+      recordCursor._id = '';
+      recordCursor.date = new Date(latestRecord.date.getTime() + 1000);
+    }
+
+    // Write fetched data to InfluxDB
+    await InfluxDbClient.writePoints(incomingRecords);
+    await InfluxDbClient.setLastRecordDate(recordType, recordCursor.date);
+
     // Break if more than MAX_ENTRIES entries were fetched
-    if (entriesFetched > MAX_ENTRIES) {
-      logger.warn(`Fetched more than ${MAX_ENTRIES} entries, deferring until next tick`);
+    if (totalRecordsFetched > JOB_LIMIT) {
+      logger.warn(`Fetched more than ${JOB_LIMIT} entries, deferring until next tick`);
       break;
     }
 
     // Log progress
-    const paddedTotal = String(entriesFetched).padStart(6, ' ');
+    const paddedTotal = String(totalRecordsFetched).padStart(6, ' ');
     logger.info(`Fetched ${paddedTotal} ${recordType}-records, synced up to ${recordCursor.date.toISOString()}`);
   }
 
@@ -84,8 +94,15 @@ export async function syncCollecction(recordType: string): Promise<void> {
     await InfluxDbClient.close();
     process.exit(0);
   }
+}
 
-  // Up next is publishing on the registry
-  // Letting it pull my own data
-  // And of course getting boluses, carbs, etc
+function getCollections(): string[] {
+  const only = process.argv.includes('--only');
+  if (!only) {
+    return ['treatments', 'entries'];
+  }
+  else {
+    const toSync = process.argv[process.argv.indexOf('--only') + 1];
+    return [toSync];
+  }
 }
