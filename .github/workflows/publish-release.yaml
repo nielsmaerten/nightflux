@@ -1,13 +1,21 @@
-name: Compile and Publish Release
+name: Build and Attach Release Assets
 
 on:
-  push:
-    tags:
-      - 'v*.*.*'  # triggers on version tags
+  release:
+    types: [published]
 
 jobs:
   build-and-release:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            binary_name: nightflux-linux
+          - os: windows-latest
+            binary_name: nightflux.exe
+          - os: macos-latest
+            binary_name: nightflux-macos
+    runs-on: ${{ matrix.os }}
 
     steps:
       - name: Checkout repository
@@ -20,25 +28,14 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Compile project
-        run: bun compile src/nightflux.ts --outfile nightflux
-
-      - name: Create release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          draft: false
-          prerelease: false
+        run: bun compile src/nightflux.ts --outfile ${{ matrix.binary_name }}
 
       - name: Upload release asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./nightflux
-          asset_name: nightflux
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./${{ matrix.binary_name }}
+          asset_name: ${{ matrix.binary_name }}
           asset_content_type: application/octet-stream
