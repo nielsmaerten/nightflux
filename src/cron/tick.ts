@@ -14,6 +14,7 @@ export default async function onTick(): Promise<void> {
   for (const collection of collections) {
     await syncCollecction(collection);
   }
+  logger.info('Job completed');
   setIsRunning(false);
 }
 
