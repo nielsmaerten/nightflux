@@ -13,7 +13,7 @@ jobs:
           - os: ubuntu-latest
             binary_name: nightflux-linux
           - os: windows-latest
-            binary_name: nightflux.exe
+            binary_name: nightflux-windows.exe
           - os: macos-latest
             binary_name: nightflux-macos
     runs-on: ${{ matrix.os }}
@@ -38,4 +38,5 @@ jobs:
           path: ${{ matrix.binary_name }}
           if-no-files-found: 'warn'
           retention-days: 7
+          compression: 9
           overwrite: false
