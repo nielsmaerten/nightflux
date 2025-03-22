@@ -1,8 +1,9 @@
-name: Build and Upload Release Assets
+name: Build binaries
 
 on:
-  release:
-    types: [published]
+  push:
+    branches:
+      - main
 
 jobs:
   build-and-upload:
@@ -30,9 +31,8 @@ jobs:
       - name: Compile project
         run: bun compile src/nightflux.ts --outfile ${{ matrix.binary_name }}
 
-      - name: Upload Release Asset
-        uses: softprops/action-gh-release@v1
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
         with:
-          files: ${{ matrix.binary_name }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+          name: ${{ matrix.binary_name }}
+          path: ${{ matrix.binary_name }}
