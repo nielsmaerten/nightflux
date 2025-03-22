@@ -32,7 +32,10 @@ jobs:
         run: bun compile src/nightflux.ts --outfile ${{ matrix.binary_name }}
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.binary_name }}
           path: ${{ matrix.binary_name }}
+          if-no-files-found: 'warn'
+          retention-days: 7
+          overwrite: false
