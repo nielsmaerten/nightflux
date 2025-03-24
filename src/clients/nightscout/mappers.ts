@@ -53,10 +53,23 @@ export function mapTreatment(e: any): NightfluxPoint[] {
     source: JSON.stringify(e),
   });
 
-  if (!e.carbs && !e.insulin) {
-    // This point is not useful,
-    // but we need to return something
-    // so the cursor can be updated
+  if (parseFloat(e.rate)) points.push({
+    _id: e.identifier,
+    measurement: 'basal',
+    date: new Date(e.created_at),
+    tags: {},
+    fields: {
+      rate: ['float', e.rate || 0],
+      eventType: ['string', e.eventType || 'N/A'],
+      type: ['string', e.type || 'N/A'],
+    },
+    source: JSON.stringify(e),
+  });
+
+  // If no points were added, add a dummy point
+  // This won't be written to InfluxDB, but it will
+  // update the timestamp of the cursor so we can move on
+  if (points.length === 0) {
     points.push({
       _id: e.identifier,
       measurement: '', // Empty measurement to avoid writing to InfluxDB

@@ -88,7 +88,16 @@ export default class NightscoutClient {
     const result = response.data.result as unknown[];
 
     // Map results to a common format
-    return result.map(mapEntry).flat();
+    const points = result.map(mapEntry).flat();
+
+    // If any of the points have the exact same date, log a warning
+    const dates = points.map(p => p.date.toISOString());
+    const uniqueDates = new Set(dates);
+    if (dates.length !== uniqueDates.size) {
+      const msg = 'Duplicate dates found in Nightscout entries';
+      logger.error(msg, { dates });
+    }
+    return points;
   }
 
   private async fetchTreatmentsSince(date: Date, limit: number): Promise<NightfluxPoint[]> {
