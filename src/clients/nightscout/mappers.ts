@@ -22,6 +22,7 @@ export function mapEntry(e: any): NightfluxPoint[] {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function mapTreatment(e: any): NightfluxPoint[] {
   const points: NightfluxPoint[] = [];
+  const noData = !e.insulin && !e.carbs && !e.rate;
 
   if (e.insulin) {
     const isSMB = e.type === 'SMB' || e.isSMB === true;
@@ -53,7 +54,20 @@ export function mapTreatment(e: any): NightfluxPoint[] {
     source: JSON.stringify(e),
   });
 
-  if (!e.carbs && !e.insulin) {
+  if (e.rate) points.push({
+    _id: e.identifier,
+    measurement: 'basal',
+    date: new Date(e.created_at),
+    tags: {},
+    fields: {
+      rate: ['float', e.rate],
+      eventType: ['string', e.eventType || 'N/A'],
+      type: ['string', e.type || 'N/A'],
+    },
+    source: JSON.stringify(e),
+  });
+
+  if (noData) {
     // This point is not useful,
     // but we need to return something
     // so the cursor can be updated

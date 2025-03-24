@@ -20,40 +20,40 @@ export async function writePoints(data: NightfluxPoint[]) {
     }
   }
 
-  logger.debug(`Wrote ${data.length} entries to InfluxDB`);
+  logger.debug(`Wrote ${data.length} records to InfluxDB`);
 };
 
-export function getInfluxDbPoint(entry: NightfluxPoint) {
+export function getInfluxDbPoint(nsPoint: NightfluxPoint) {
   // If the entry has no measurement, it should be skipped
-  if (!entry.measurement) return null;
+  if (!nsPoint.measurement) return null;
 
   // Create a point for the entry
-  const point = new Point(entry.measurement)
-    .timestamp(entry.date);
+  const influxPoint = new Point(nsPoint.measurement)
+    .timestamp(nsPoint.date);
 
   // Add tags to the point
-  for (const [key, value] of Object.entries(entry.tags)) {
-    point.tag(key, value);
+  for (const [key, value] of Object.entries(nsPoint.tags)) {
+    influxPoint.tag(key, value);
   }
 
   // Add fields to the point
-  for (const [key, field] of Object.entries(entry.fields)) {
+  for (const [key, field] of Object.entries(nsPoint.fields)) {
     const [fieldType, fieldValue] = field;
     switch (fieldType) {
       case 'float':
-        point.floatField(key, fieldValue);
+        influxPoint.floatField(key, fieldValue);
         break;
       case 'int':
-        point.intField(key, fieldValue);
+        influxPoint.intField(key, Math.round(fieldValue));
         break;
       case 'string':
-        point.stringField(key, fieldValue);
+        influxPoint.stringField(key, fieldValue);
         break;
       case 'boolean':
-        point.booleanField(key, fieldValue);
+        influxPoint.booleanField(key, fieldValue);
         break;
     }
   }
 
-  return point;
+  return influxPoint;
 }
