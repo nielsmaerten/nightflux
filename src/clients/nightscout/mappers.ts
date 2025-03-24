@@ -22,7 +22,6 @@ export function mapEntry(e: any): NightfluxPoint[] {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function mapTreatment(e: any): NightfluxPoint[] {
   const points: NightfluxPoint[] = [];
-  const noData = !e.insulin && !e.carbs && !e.rate;
 
   if (e.insulin) {
     const isSMB = e.type === 'SMB' || e.isSMB === true;
@@ -54,23 +53,23 @@ export function mapTreatment(e: any): NightfluxPoint[] {
     source: JSON.stringify(e),
   });
 
-  if (e.rate) points.push({
+  if (parseFloat(e.rate)) points.push({
     _id: e.identifier,
     measurement: 'basal',
     date: new Date(e.created_at),
     tags: {},
     fields: {
-      rate: ['float', e.rate],
+      rate: ['float', e.rate || 0],
       eventType: ['string', e.eventType || 'N/A'],
       type: ['string', e.type || 'N/A'],
     },
     source: JSON.stringify(e),
   });
 
-  if (noData) {
-    // This point is not useful,
-    // but we need to return something
-    // so the cursor can be updated
+  // If no points were added, add a dummy point
+  // This won't be written to InfluxDB, but it will
+  // update the timestamp of the cursor so we can move on
+  if (points.length === 0) {
     points.push({
       _id: e.identifier,
       measurement: '', // Empty measurement to avoid writing to InfluxDB
