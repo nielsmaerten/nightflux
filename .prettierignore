@@ -1,0 +1,7 @@
+# Ignore everything by default
+*
+
+# Re-include only the src directory
+!src
+!src/**
+
