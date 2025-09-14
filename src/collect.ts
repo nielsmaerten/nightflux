@@ -197,6 +197,7 @@ export async function collectExport(
   logger.endProgress();
 
   const exportObj: NightfluxReport = {
+    $schema: "https://nightflux-reporter.onrender.com/schema/v1",
     meta: {
       schema_version: 1,
       generated_at: Math.floor(Date.now() / 1000),

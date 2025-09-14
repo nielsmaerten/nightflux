@@ -4,6 +4,7 @@ import { z } from 'zod';
  * Representation of essential diabetes data in a given timeframe (Type reference)
  */
 export interface NightfluxReport {
+  $schema?: string; // URL to the JSON Schema
   meta: {
     schema_version: number;
     generated_at: number; // epoch seconds
@@ -150,6 +151,7 @@ export const DaySchema = z
 
 export const NightfluxReportSchema = z
   .object({
+    $schema: z.url().optional(),
     meta: MetaSchema,
     profiles: ProfilesSchema,
     notes: z.array(NoteSchema).optional(),

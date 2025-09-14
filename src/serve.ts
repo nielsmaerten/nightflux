@@ -3,6 +3,7 @@ import { z } from 'zod';
 import collectExport from './collect.js';
 import logger from './utils/logger.js';
 import { resolveRange, resolveTimezone } from './utils/range.js';
+import { NightfluxReportSchema } from './domain/schema.js';
 
 const RequestSchema = z
   .object({
@@ -20,6 +21,12 @@ export async function startServer(host = process.env.HOST ?? '0.0.0.0', port = N
   const app = Fastify({ logger: false, trustProxy: true, bodyLimit: 1024 * 1024 });
 
   app.get('/health', async () => ({ ok: true }));
+
+  // Expose JSON Schema for the Nightflux report
+  app.get('/schema/v1', async (_request, reply) => {
+    const schema = z.toJSONSchema(NightfluxReportSchema);
+    return reply.code(200).send(schema);
+  });
 
   app.post('/collect', async (request, reply) => {
     const parsed = RequestSchema.safeParse(request.body);
