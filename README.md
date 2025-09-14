@@ -29,6 +29,37 @@ Notes:
 - The `url` must include a `token` query parameter (readonly token recommended).
 - Dates are local calendar dates (`YYYY-MM-DD`); the library determines the timezone from the active profile.
 
+## CLI Usage
+
+Install or run via npx (Node 18.18+):
+
+```
+# Using npx from the registry after publish
+npx nightflux-core [url] [options]
+
+# Or install locally and use the bin
+npm install nightflux-core
+npx nightflux-core [url] -d 30 --pretty
+```
+
+Options:
+
+- `-u, --url <url>`: Nightscout base URL with `?token=...`
+- `-s, --start <YYYY-MM-DD>`: Start date
+- `-e, --end <YYYY-MM-DD>`: End date
+- `-d, --days <n>`: Number of days (derives the other side)
+- `-o, --out <file>`: Output file path (default `ns-report-START-END.json`)
+- `--pretty`: Pretty-print JSON (2 spaces)
+- `-h, --help`: Show help
+- `-V, --version`: Show version
+
+Examples:
+
+```
+npx nightflux-core https://ns.example?token=... -s 2025-09-01 -e 2025-09-07
+npx nightflux-core -u https://ns.example?token=... -d 30 --pretty -o out/report.json
+```
+
 ## What It Returns
 
 The function returns an object compliant with the `DiabetesDataSchema` defined in `src/domain/schema.ts`. Top‑level fields:
@@ -97,4 +128,3 @@ The function returns an object compliant with the `DiabetesDataSchema` defined i
 - Build: `npm run build`
 - Typecheck: `npm run typecheck`
 - Tests: `npm test`
-
