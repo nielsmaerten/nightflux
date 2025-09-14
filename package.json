@@ -23,6 +23,7 @@
     "prepare": "npm run build",
     "prepack": "npm run build",
     "generate:schema": "tsx src/domain/json-schema.ts > src/domain/nightflux-report.schema.json",
+    "serve": "tsx src/serve.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc -p tsconfig.json --noEmit"
@@ -43,6 +44,7 @@
   ],
   "dependencies": {
     "axios": "^1.11.0",
+    "fastify": "^4.28.1",
     "commander": "^12.1.0",
     "date-fns": "^3.6.0",
     "date-fns-tz": "^3.1.3",

@@ -2,13 +2,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { addDays, format, parse } from 'date-fns';
-import { formatInTimeZone } from 'date-fns-tz';
 import { Command } from 'commander';
-import Nightscout from './clients/nightscout.js';
-import ProfileClient from './resources/profiles/profiles.js';
 import { collectExport } from './collect.js';
 import logger from './utils/logger.js';
+import { resolveRange, resolveTimezone } from './utils/range.js';
 
 function readPackageVersion(): string {
   try {
@@ -25,53 +22,7 @@ function readPackageVersion(): string {
   }
 }
 
-function parseDateStrict(s: string): Date {
-  const re = /^\d{4}-\d{2}-\d{2}$/;
-  if (!re.test(s)) throw new Error(`Invalid date format: ${s}. Expected YYYY-MM-DD.`);
-  const p = parse(s, 'yyyy-MM-dd', new Date(0));
-  if (format(p, 'yyyy-MM-dd') !== s) throw new Error(`Invalid date: ${s}.`);
-  return p;
-}
-
-async function resolveTimezone(url: string): Promise<string> {
-  const ns = new Nightscout(url);
-  const profileClient = new ProfileClient(ns);
-  const latest = await profileClient.fetchLatestProfile();
-  return latest.tz || 'UTC';
-}
-
-function resolveRange(
-  tz: string,
-  start?: string,
-  end?: string,
-  days?: number,
-): { start: string; end: string } {
-  const today = formatInTimeZone(new Date(), tz, 'yyyy-MM-dd');
-  const yday = format(addDays(parse(today, 'yyyy-MM-dd', new Date(0)), -1), 'yyyy-MM-dd');
-  let s = start;
-  let e = end;
-  if (s && e) {
-    // keep
-  } else if (s && days) {
-    const sp = parseDateStrict(s);
-    e = format(addDays(sp, days - 1), 'yyyy-MM-dd');
-  } else if (e && days) {
-    const ep = parseDateStrict(e);
-    s = format(addDays(ep, -(days - 1)), 'yyyy-MM-dd');
-  } else if (s && !e) {
-    e = yday;
-  } else if (e && !s) {
-    const ep = parseDateStrict(e);
-    s = format(addDays(ep, -29), 'yyyy-MM-dd');
-  } else {
-    e = yday;
-    s = format(addDays(parseDateStrict(e), -29), 'yyyy-MM-dd');
-  }
-  const sp = parseDateStrict(s!);
-  const ep = parseDateStrict(e!);
-  if (sp.getTime() > ep.getTime()) throw new Error('start must be <= end.');
-  return { start: s!, end: e! };
-}
+// Range utilities moved to src/utils/range.ts
 
 async function run(
   urlArg: string | undefined,
