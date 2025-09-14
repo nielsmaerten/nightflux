@@ -8,10 +8,15 @@ import { Command } from 'commander';
 import Nightscout from './clients/nightscout.js';
 import ProfileClient from './resources/profiles/profiles.js';
 import { collectExport } from './collect.js';
+import logger from './utils/logger.js';
 
 function readPackageVersion(): string {
   try {
-    const pkgPath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'package.json');
+    const pkgPath = path.resolve(
+      path.dirname(fileURLToPath(import.meta.url)),
+      '..',
+      'package.json',
+    );
     const txt = fs.readFileSync(pkgPath, 'utf8');
     const pkg = JSON.parse(txt) as { version?: string };
     return pkg.version || '0.0.0';
@@ -35,7 +40,12 @@ async function resolveTimezone(url: string): Promise<string> {
   return latest.tz || 'UTC';
 }
 
-function resolveRange(tz: string, start?: string, end?: string, days?: number): { start: string; end: string } {
+function resolveRange(
+  tz: string,
+  start?: string,
+  end?: string,
+  days?: number,
+): { start: string; end: string } {
   const today = formatInTimeZone(new Date(), tz, 'yyyy-MM-dd');
   const yday = format(addDays(parse(today, 'yyyy-MM-dd', new Date(0)), -1), 'yyyy-MM-dd');
   let s = start;
@@ -63,19 +73,26 @@ function resolveRange(tz: string, start?: string, end?: string, days?: number): 
   return { start: s!, end: e! };
 }
 
-async function run(urlArg: string | undefined, opts: {
-  url?: string;
-  start?: string;
-  end?: string;
-  days?: string | number;
-  out?: string;
-  pretty?: boolean;
-}) {
+async function run(
+  urlArg: string | undefined,
+  opts: {
+    url?: string;
+    start?: string;
+    end?: string;
+    days?: string | number;
+    out?: string;
+    pretty?: boolean;
+  },
+) {
   const url = urlArg || opts.url || process.env.NIGHTSCOUT_URL;
-  if (!url) throw new Error('Nightscout URL is required. Provide [url], --url, or NIGHTSCOUT_URL env.');
+  if (!url)
+    throw new Error('Nightscout URL is required. Provide [url], --url, or NIGHTSCOUT_URL env.');
 
   const daysNum = opts.days === undefined ? undefined : Number(opts.days);
-  if (daysNum !== undefined && (!Number.isFinite(daysNum) || !Number.isInteger(daysNum) || daysNum < 1)) {
+  if (
+    daysNum !== undefined &&
+    (!Number.isFinite(daysNum) || !Number.isInteger(daysNum) || daysNum < 1)
+  ) {
     throw new Error('Invalid --days (must be positive integer).');
   }
 
@@ -88,8 +105,9 @@ async function run(urlArg: string | undefined, opts: {
   const data = await collectExport(url, start, end);
   const json = opts.pretty ? JSON.stringify(data, null, 2) : JSON.stringify(data);
   fs.mkdirSync(path.dirname(outPath), { recursive: true });
+  logger.info('Writing export file');
   fs.writeFileSync(outPath, json + '\n', 'utf8');
-  console.error(`Wrote ${outPath}`);
+  logger.info(`Wrote ${outPath}`);
 }
 
 const program = new Command();
@@ -104,9 +122,12 @@ program
   .option('-d, --days <n>', 'Number of days (overrides one side)')
   .option('-o, --out <file>', 'Output file (default ns-report-START-END.json)')
   .option('--pretty', 'Pretty-print JSON (2 spaces)')
+  .option('-q, --quiet', 'Suppress logs')
   .showHelpAfterError()
   .action(async (urlArg: string | undefined, opts: any) => {
     try {
+      // Configure logger verbosity before running
+      logger.setQuiet(!!opts.quiet);
       await run(urlArg, opts);
     } catch (err: any) {
       console.error(`Error: ${err?.message || err}`);

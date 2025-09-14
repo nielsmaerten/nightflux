@@ -96,9 +96,7 @@ export default class CarbsClient {
     let cursor = initializeCursor(strategy, endMs);
 
     for (let pageNo = 0; pageNo < maxPages; pageNo++) {
-      const params = buildCursorParams(strategy, timeWindow, cursor, count, [
-        'find[carbs][$gt]=0',
-      ]);
+      const params = buildCursorParams(strategy, timeWindow, cursor, count, ['find[carbs][$gt]=0']);
       const path = `/api/v1/treatments.json?${params.join('&')}`;
       const page = await this.ns.query<NsTreatment[]>(path);
       if (!Array.isArray(page) || page.length === 0) break;

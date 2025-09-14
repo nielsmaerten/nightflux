@@ -8,6 +8,7 @@ import BasalClient from './resources/basal/basal.js';
 import { toUtcRange } from './utils/timezones.js';
 import { DiabetesDataSchema, type DiabetesData } from './domain/schema.js';
 import { parse, isValid, addDays, format } from 'date-fns';
+import logger from './utils/logger.js';
 
 /**
  * Produce a full export of diabetes data from a Nightscout instance.
@@ -18,7 +19,11 @@ import { parse, isValid, addDays, format } from 'date-fns';
  *
  * Returns a JSON object validated by DiabetesDataSchema.
  */
-export async function collectExport(url: string, start: string, end: string): Promise<DiabetesData> {
+export async function collectExport(
+  url: string,
+  start: string,
+  end: string,
+): Promise<DiabetesData> {
   // Validate date strings
   const dateRe = /^\d{4}-\d{2}-\d{2}$/;
   if (!dateRe.test(start)) throw new Error(`Invalid start date format: ${start}`);
@@ -29,6 +34,9 @@ export async function collectExport(url: string, start: string, end: string): Pr
   if (format(startParsed, 'yyyy-MM-dd') !== start) throw new Error(`Invalid start date: ${start}`);
   if (format(endParsed, 'yyyy-MM-dd') !== end) throw new Error(`Invalid end date: ${end}`);
   if (startParsed.getTime() > endParsed.getTime()) throw new Error('start must be <= end');
+
+  // High-level start log
+  logger.info(`Collecting nightscout data from ${start} to ${end}.`);
 
   // Clients
   const ns = new Nightscout(url);
@@ -67,9 +75,14 @@ export async function collectExport(url: string, start: string, end: string): Pr
     startDate?: string;
     store?: Record<string, { basal?: NsBasalEntry[] }>;
   };
-  const rawDocs = await ns.query<NsProfileDoc[]>(`/api/v1/profile.json?start=${rangeStart}&end=${rangeEnd}`);
+  const rawDocs = await ns.query<NsProfileDoc[]>(
+    `/api/v1/profile.json?start=${rangeStart}&end=${rangeEnd}`,
+  );
   const normalizeName = (s: string) => s.replace(/\s*\(\s*\d+\s*%\s*\)\s*$/u, '').trim();
-  const startsByName = new Map<string, Array<{ startMs: number; docId: string; docName: string }>>();
+  const startsByName = new Map<
+    string,
+    Array<{ startMs: number; docId: string; docName: string }>
+  >();
   for (const doc of rawDocs || []) {
     const startMs =
       typeof doc.date === 'number'
@@ -89,12 +102,18 @@ export async function collectExport(url: string, start: string, end: string): Pr
   }
   for (const arr of startsByName.values()) arr.sort((a, b) => a.startMs - b.startMs);
 
-  // Fetch CGM, carbs, bolus once and bucket by day later
-  const [cgmAll, carbsAll, bolusAll] = await Promise.all([
-    cgmClient.getBetween(rangeStart, rangeEnd),
-    carbsClient.getBetween(rangeStart, rangeEnd),
-    bolusClient.getBetween(rangeStart, rangeEnd),
-  ]);
+  // Fetch CGM, carbs, bolus and bucket by day later
+  logger.infoInlineStart('Fetching cgm entries...');
+  const cgmAll = await cgmClient.getBetween(rangeStart, rangeEnd);
+  logger.infoInlineDone(`Done: ${cgmAll.length} entries`);
+
+  logger.infoInlineStart('Fetching carb entries...');
+  const carbsAll = await carbsClient.getBetween(rangeStart, rangeEnd);
+  logger.infoInlineDone(`Done: ${carbsAll.length} entries`);
+
+  logger.infoInlineStart('Fetching bolus entries...');
+  const bolusAll = await bolusClient.getBetween(rangeStart, rangeEnd);
+  logger.infoInlineDone(`Done: ${bolusAll.length} entries`);
 
   // Build list of day strings (inclusive)
   const daysList: string[] = [];
@@ -117,7 +136,8 @@ export async function collectExport(url: string, start: string, end: string): Pr
       const atMs = Math.floor(atSec * 1000);
       let chosen: { startMs: number; docId: string; docName: string } | undefined;
       for (const it of arr) {
-        if (it.startMs <= atMs) chosen = it; // keep latest <= atMs
+        if (it.startMs <= atMs)
+          chosen = it; // keep latest <= atMs
         else break;
       }
       if (!chosen) chosen = arr[arr.length - 1]; // fallback to latest in range
@@ -132,12 +152,17 @@ export async function collectExport(url: string, start: string, end: string): Pr
         entries.push({ id: mapToStableId(it.id, it.start), pct: it.pct, start: it.start });
     }
     if (entries.length === 0)
-      entries.push({ id: mapToStableId(current?.id || 'unknown', dayStart), pct: current?.pct ?? 100, start: dayStart });
+      entries.push({
+        id: mapToStableId(current?.id || 'unknown', dayStart),
+        pct: current?.pct ?? 100,
+        start: dayStart,
+      });
     return entries;
   }
 
   // Assemble per-day objects
   const days = [] as DiabetesData['days'];
+  logger.startProgress('Assembling basal timelines...', daysList.length);
   for (const dayStr of daysList) {
     const { start: dayStart, end: dayEnd } = toUtcRange(dayStr, dayStr, tz);
 
@@ -167,10 +192,15 @@ export async function collectExport(url: string, start: string, end: string): Pr
       bolus,
       basal,
     });
+    logger.tickProgress(1);
   }
+  logger.endProgress();
 
   const exportObj: DiabetesData = {
-    meta: { schema_version: 1, generated_at: Math.floor(Date.now() / 1000) },
+    meta: {
+      schema_version: 1,
+      generated_at: Math.floor(Date.now() / 1000),
+    },
     profiles,
     days,
   };

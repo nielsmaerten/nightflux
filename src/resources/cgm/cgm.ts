@@ -1,6 +1,10 @@
 import Nightscout from '../../clients/nightscout.js';
 import { CgmArraySchema } from '../../domain/schema.js';
-import { validateTimeRange, validateWithSchema, dedupByTimestamp } from '../../utils/common-utils.js';
+import {
+  validateTimeRange,
+  validateWithSchema,
+  dedupByTimestamp,
+} from '../../utils/common-utils.js';
 
 type NsEntry = {
   date: number; // ms since epoch
