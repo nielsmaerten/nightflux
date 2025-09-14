@@ -1,4 +1,6 @@
 import Fastify from 'fastify';
+import fastifyStatic from '@fastify/static';
+import path from 'path';
 import { z } from 'zod';
 import collectExport from './collect.js';
 import logger from './utils/logger.js';
@@ -22,13 +24,24 @@ export async function startServer(host = process.env.HOST ?? '0.0.0.0', port = N
 
   app.get('/health', async () => ({ ok: true }));
 
+  // Static UI: serve index.html at '/'
+  let _dirname = path.dirname(new URL(import.meta.url).pathname);
+  await app.register(fastifyStatic, {
+    root: path.join(_dirname, './public'),
+    index: ['index.html'],
+    prefix: '/',
+    decorateReply: true,
+  });
+  app.get('/', async (_request, reply) => reply.sendFile('index.html'));
+
   // Expose JSON Schema for the Nightflux report
   app.get('/schema/v1', async (_request, reply) => {
     const schema = z.toJSONSchema(NightfluxReportSchema);
     return reply.code(200).send(schema);
   });
 
-  app.post('/collect', async (request, reply) => {
+  // Versioned collect endpoint
+  app.post('/collect/v1', async (request, reply) => {
     const parsed = RequestSchema.safeParse(request.body);
     if (!parsed.success) {
       return reply.code(400).send({ error: 'Invalid request body', details: parsed.error.issues });

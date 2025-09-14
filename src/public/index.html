@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark light" />
+  <title>Nightflux</title>
+  <!-- Classless, mobile-friendly styles via CDN -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/dark.min.css" />
+  <!-- Date range picker styles -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/litepicker/dist/css/litepicker.css" />
+  <style>
+    :root {
+      --content-max: 880px;
+    }
+
+    main {
+      max-width: var(--content-max);
+      margin: 0 auto;
+      padding: 1rem;
+    }
+
+    .muted {
+      opacity: 0.85;
+    }
+
+    .grid-two {
+      display: grid;
+      gap: 0.75rem;
+      grid-template-columns: 1fr;
+    }
+
+    @media (min-width: 640px) {
+      .grid-two {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .actions {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .status {
+      min-height: 1.25rem;
+    }
+
+    .note {
+      font-size: 0.95rem;
+      opacity: 0.8;
+      margin-top: 0.25rem;
+    }
+
+    hr {
+      margin: 1.25rem 0;
+    }
+
+    input[type="text"],
+    input[type="url"] {
+      width: 100%;
+    }
+
+    footer {
+      margin-top: 2rem;
+      opacity: 0.75;
+      font-size: 0.95rem;
+    }
+  </style>
+</head>
+
+<body>
+  <main>
+    <h1>Nightflux</h1>
+    <p class="muted">Your Nightscout history, ready for AI.</p>
+    <hr />
+
+    <form id="nf-form">
+      <label for="url"><strong>Nightscout URL</strong></label>
+      <input id="url" name="url" type="url" placeholder="https://my-nightscout-site.com?token=abc123" required />
+      <p class="note">Enter your full Nightscout URL, including a token with read permissions.</p>
+
+      <label for="date-start"><strong>Range</strong></label>
+      <div class="grid-two">
+        <input id="date-start" name="start" type="text" placeholder="Start date" autocomplete="off" />
+        <input id="date-end" name="end" type="text" placeholder="End date" autocomplete="off" />
+      </div>
+      <p class="note">Select a date range for the report.</p>
+
+      <div class="actions">
+        <button id="submit" type="submit">Build Report</button>
+        <span class="status" id="status" aria-live="polite"></span>
+      </div>
+    </form>
+
+    <hr />
+    <h3>Why this tool?</h3>
+    <p>
+      Nightflux builds a single, portable file of your Nightscout data for the dates you choose. This file is
+      self-contained, so it includes everything needed to analyze that period without needing access to Nightscout.
+    </p>
+    <p> Give the file to an AI like ChatGPT and it can answer questions, run its own queries, draw charts, and
+      summarize patterns. The file also carries a short, built-in guide that tells the AI how to use it.</p>
+    <p>
+      Your data is removed immediately after the report is created. If you prefer to keep everything on
+      your own computer, you can <a href="https://github.com/nielsmaerten/nightscout-core" target="_blank"
+        rel="noopener noreferrer">generate</a> the same report from the
+      command line.</p>
+
+    <footer>
+      <small>Tip: Your URL is remembered locally on this device.</small>
+    </footer>
+  </main>
+
+  <!-- Date range picker (global `Litepicker`) -->
+  <script src="https://cdn.jsdelivr.net/npm/litepicker/dist/litepicker.js"></script>
+  <script>
+    function formatDate(date) {
+      const pad = (n) => String(n).padStart(2, '0');
+      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+    }
+
+    function downloadJson(data) {
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      const ts = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
+      a.download = `nightflux-report-${ts}.json`;
+      a.href = URL.createObjectURL(blob);
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(a.href);
+    }
+
+    // Initialize form and range picker
+    document.addEventListener('DOMContentLoaded', () => {
+      const urlInput = document.getElementById('url');
+      const startInput = document.getElementById('date-start');
+      const endInput = document.getElementById('date-end');
+      const form = document.getElementById('nf-form');
+      const statusEl = document.getElementById('status');
+
+      // Prefill URL from localStorage or query string
+      const params = new URLSearchParams(location.search);
+      const savedUrl = localStorage.getItem('nightflux.url') || '';
+      urlInput.value = params.get('url') || savedUrl;
+      urlInput.addEventListener('change', () =>
+        localStorage.setItem('nightflux.url', urlInput.value.trim()),
+      );
+
+      // Default range: last 30 days
+      const end = params.get('end') ? new Date(params.get('end')) : new Date();
+      const start = params.get('start') ? new Date(params.get('start')) : new Date(end);
+      if (!params.get('start')) start.setDate(end.getDate() - 30);
+
+      startInput.value = formatDate(start);
+      endInput.value = formatDate(end);
+
+      // Attach Litepicker to two inputs
+      // eslint-disable-next-line no-undef
+      const picker = new Litepicker({
+        element: startInput,
+        elementEnd: endInput,
+        singleMode: false,
+        format: 'YYYY-MM-DD',
+        startDate: start,
+        endDate: end,
+        numberOfMonths: window.innerWidth < 640 ? 1 : 2,
+        numberOfColumns: window.innerWidth < 640 ? 1 : 2,
+        mobileFriendly: true,
+        autoApply: true,
+        tooltipText: { one: 'day', other: 'days' },
+      });
+
+      form.addEventListener('submit', async (ev) => {
+        ev.preventDefault();
+        const url = urlInput.value.trim();
+        if (!url) {
+          statusEl.textContent = 'Please provide a Nightscout URL with token.';
+          return;
+        }
+        statusEl.textContent = 'Collecting… this can take a moment.';
+        try {
+          const body = { url, start: startInput.value, end: endInput.value };
+          const res = await fetch('/collect/v1', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify(body),
+          });
+          if (!res.ok) {
+            let msg = 'Request failed.';
+            try {
+              const e = await res.json();
+              msg = e && e.error ? e.error : msg;
+            } catch { }
+            statusEl.textContent = msg;
+            return;
+          }
+          const data = await res.json();
+          downloadJson(data);
+          statusEl.textContent = 'Download started.';
+        } catch (err) {
+          console.error(err);
+          statusEl.textContent = 'Unexpected error.';
+        }
+      });
+    });
+  </script>
+</body>
+
+</html>
