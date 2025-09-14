@@ -32,6 +32,9 @@ export async function collectExport(url: string, start: string, end: string): Pr
 
   // Clients
   const ns = new Nightscout(url);
+
+  // Fail fast if the instance/token is unreachable or invalid
+  await ns.testConnection();
   const cgmClient = new CgmClient(ns);
   const carbsClient = new CarbsClient(ns);
   const bolusClient = new BolusClient(ns);

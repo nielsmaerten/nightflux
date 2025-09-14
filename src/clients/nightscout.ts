@@ -81,6 +81,26 @@ export default class Nightscout {
   }
 
   /**
+   * Quick connectivity check against Nightscout.
+   * Makes a request to `/api/v1/status.json` and throws on failure.
+   */
+  async testConnection(): Promise<void> {
+    try {
+      // Status endpoint: returns basic server metadata when reachable and token valid
+      await this.#client.get('/api/v1/status.json');
+    } catch (error: any) {
+      const status = error?.response?.status;
+      const message =
+        status === 401 || status === 403
+          ? 'Unauthorized: token missing or lacks permissions.'
+          : status
+            ? `HTTP ${status}`
+            : 'Network or DNS error';
+      throw new Error(`Nightscout connectivity check failed (${message}).`);
+    }
+  }
+
+  /**
    * Perform a GET request relative to the Nightscout base URL.
    */
   async query<T = unknown>(path: string, config?: AxiosRequestConfig): Promise<T> {
