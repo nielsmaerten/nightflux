@@ -6,6 +6,8 @@ import collectExport from './collect.js';
 import logger from './utils/logger.js';
 import { resolveRange, resolveTimezone } from './utils/range.js';
 import { NightfluxReportSchema } from './domain/schema.js';
+import { stringify as yamlStringify } from 'yaml';
+import { readSchemaMarkdown, toYamlCommentBlock } from './utils/yaml-header.js';
 
 const RequestSchema = z
   .object({
@@ -13,6 +15,7 @@ const RequestSchema = z
     start: z.string().regex(/^\d{4}-\d{2}-\d{2}$/u, 'Expected YYYY-MM-DD').optional(),
     end: z.string().regex(/^\d{4}-\d{2}-\d{2}$/u, 'Expected YYYY-MM-DD').optional(),
     days: z.number().int().positive().optional(),
+    yaml: z.boolean().optional(),
   })
   .strict();
 
@@ -46,11 +49,21 @@ export async function startServer(host = process.env.HOST ?? '0.0.0.0', port = N
     if (!parsed.success) {
       return reply.code(400).send({ error: 'Invalid request body', details: parsed.error.issues });
     }
-    const { url, start, end, days } = parsed.data;
+    const { url, start, end, days, yaml } = parsed.data;
     try {
       const tz = await resolveTimezone(url);
       const range = resolveRange(tz, start, end, days);
       const report = await collectExport(url, range.start, range.end);
+      if (yaml) {
+        let body = yamlStringify(report) + '\n';
+        const md = readSchemaMarkdown();
+        if (md) {
+          const header = toYamlCommentBlock(md);
+          body = `${header}\n\n${body}`;
+        }
+        reply.header('content-type', 'application/yaml; charset=utf-8');
+        return reply.code(200).send(body);
+      }
       return reply.code(200).send(report);
     } catch (err) {
       const message = (err as Error)?.message || 'Internal error';

@@ -4,8 +4,10 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Command } from 'commander';
 import { collectExport } from './collect.js';
+import { stringify as yamlStringify } from 'yaml';
 import logger from './utils/logger.js';
 import { resolveRange, resolveTimezone } from './utils/range.js';
+import { readSchemaMarkdown, toYamlCommentBlock } from './utils/yaml-header.js';
 
 function readPackageVersion(): string {
   try {
@@ -33,6 +35,7 @@ async function run(
     days?: string | number;
     out?: string;
     pretty?: boolean;
+    yaml?: boolean;
   },
 ) {
   const url = urlArg || opts.url || process.env.NIGHTSCOUT_URL;
@@ -50,14 +53,27 @@ async function run(
   const tz = await resolveTimezone(url);
   const { start, end } = resolveRange(tz, opts.start, opts.end, daysNum);
 
-  const defaultOut = `ns-report-${start}-${end}.json`;
+  const defaultOut = opts.yaml
+    ? `ns-report-${start}-${end}.yaml`
+    : `ns-report-${start}-${end}.json`;
   const outPath = opts.out ? path.resolve(opts.out) : path.resolve(process.cwd(), defaultOut);
 
   const data = await collectExport(url, start, end);
-  const json = opts.pretty ? JSON.stringify(data, null, 2) : JSON.stringify(data);
+  let content = opts.yaml
+    ? yamlStringify(data)
+    : opts.pretty
+      ? JSON.stringify(data, null, 2)
+      : JSON.stringify(data);
+  if (opts.yaml) {
+    const md = readSchemaMarkdown();
+    if (md) {
+      const header = toYamlCommentBlock(md);
+      content = `${header}\n\n${content}`;
+    }
+  }
   fs.mkdirSync(path.dirname(outPath), { recursive: true });
   logger.info('Writing export file');
-  fs.writeFileSync(outPath, json + '\n', 'utf8');
+  fs.writeFileSync(outPath, content + '\n', 'utf8');
   logger.info(`Wrote ${outPath}`);
 }
 
@@ -73,6 +89,7 @@ program
   .option('-d, --days <n>', 'Number of days (overrides one side)')
   .option('-o, --out <file>', 'Output file (default ns-report-START-END.json)')
   .option('--pretty', 'Pretty-print JSON (2 spaces)')
+  .option('--yaml', 'Export YAML instead of JSON')
   .option('-q, --quiet', 'Suppress logs')
   .showHelpAfterError()
   .action(async (urlArg: string | undefined, opts: any) => {
