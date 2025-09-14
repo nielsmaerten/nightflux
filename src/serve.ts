@@ -54,7 +54,7 @@ export async function startServer(host = process.env.HOST ?? '0.0.0.0', port = N
       const tz = await resolveTimezone(url);
       const range = resolveRange(tz, start, end, days);
       const report = await collectExport(url, range.start, range.end);
-      if (yaml) {
+      if (yaml !== false) {
         let body = yamlStringify(report) + '\n';
         const md = readSchemaMarkdown();
         if (md) {

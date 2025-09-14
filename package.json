@@ -18,6 +18,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "clean": "rimraf dist",
+    "cli": "tsx src/cli.ts",
     "format": "prettier --write src",
     "format:check": "prettier --check src",
     "prepare": "npm run build",
