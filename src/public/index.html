@@ -122,11 +122,11 @@
       return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
     }
 
-    function downloadJson(data) {
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    function downloadYaml(yamlText) {
+      const blob = new Blob([yamlText], { type: 'text/yaml' });
       const a = document.createElement('a');
       const ts = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
-      a.download = `nightflux-report-${ts}.json`;
+      a.download = `nightflux-report-${ts}.yaml`;
       a.href = URL.createObjectURL(blob);
       document.body.appendChild(a);
       a.click();
@@ -151,7 +151,14 @@
       );
 
       // Default range: last 30 days
-      const end = params.get('end') ? new Date(params.get('end')) : new Date();
+      // Default end date: yesterday
+      const end = params.get('end')
+        ? new Date(params.get('end'))
+        : (() => {
+          const d = new Date();
+          d.setDate(d.getDate() - 1);
+          return d;
+        })();
       const start = params.get('start') ? new Date(params.get('start')) : new Date(end);
       if (!params.get('start')) start.setDate(end.getDate() - 30);
 
@@ -198,8 +205,8 @@
             statusEl.textContent = msg;
             return;
           }
-          const data = await res.json();
-          downloadJson(data);
+          const yaml = await res.text();
+          downloadYaml(yaml);
           statusEl.textContent = 'Download started.';
         } catch (err) {
           console.error(err);
