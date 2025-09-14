@@ -6,7 +6,7 @@ import ProfileClient from './resources/profiles/profiles.js';
 import ActiveProfileClient from './resources/profiles/activeProfileClient.js';
 import BasalClient from './resources/basal/basal.js';
 import { toUtcRange } from './utils/timezones.js';
-import { DiabetesDataSchema, type DiabetesData } from './domain/schema.js';
+import { NightfluxReportSchema, type NightfluxReport } from './domain/schema.js';
 import { parse, isValid, addDays, format } from 'date-fns';
 import logger from './utils/logger.js';
 
@@ -17,13 +17,13 @@ import logger from './utils/logger.js';
  * - url: Nightscout base URL with `token` query param (e.g., https://ns.example?token=...)
  * - start, end: inclusive local dates as 'YYYY-MM-DD'
  *
- * Returns a JSON object validated by DiabetesDataSchema.
+ * Returns a JSON object validated by NightfluxReportSchema.
  */
 export async function collectExport(
   url: string,
   start: string,
   end: string,
-): Promise<DiabetesData> {
+): Promise<NightfluxReport> {
   // Validate date strings
   const dateRe = /^\d{4}-\d{2}-\d{2}$/;
   if (!dateRe.test(start)) throw new Error(`Invalid start date format: ${start}`);
@@ -161,7 +161,7 @@ export async function collectExport(
   }
 
   // Assemble per-day objects
-  const days = [] as DiabetesData['days'];
+  const days = [] as NightfluxReport['days'];
   logger.startProgress('Assembling basal timelines...', daysList.length);
   for (const dayStr of daysList) {
     const { start: dayStart, end: dayEnd } = toUtcRange(dayStr, dayStr, tz);
@@ -196,7 +196,7 @@ export async function collectExport(
   }
   logger.endProgress();
 
-  const exportObj: DiabetesData = {
+  const exportObj: NightfluxReport = {
     meta: {
       schema_version: 1,
       generated_at: Math.floor(Date.now() / 1000),
@@ -206,7 +206,7 @@ export async function collectExport(
   };
 
   // Validate before returning
-  const parsed = DiabetesDataSchema.safeParse(exportObj);
+  const parsed = NightfluxReportSchema.safeParse(exportObj);
   if (!parsed.success) {
     throw new Error(`Export failed schema validation: ${parsed.error.message}`);
   }

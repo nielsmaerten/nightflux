@@ -3,7 +3,7 @@ import { z } from 'zod';
 /**
  * Representation of essential diabetes data in a given timeframe (Type reference)
  */
-export interface DiabetesData {
+export interface NightfluxReport {
   meta: {
     schema_version: number;
     generated_at: number; // epoch seconds
@@ -148,7 +148,7 @@ export const DaySchema = z
 
 // ---------- Root schema ----------
 
-export const DiabetesDataSchema = z
+export const NightfluxReportSchema = z
   .object({
     meta: MetaSchema,
     profiles: ProfilesSchema,
@@ -159,7 +159,7 @@ export const DiabetesDataSchema = z
 
 // ---------- Helpers ----------
 
-export type DiabetesDataZ = z.infer<typeof DiabetesDataSchema>;
+export type NightfluxReportZ = z.infer<typeof NightfluxReportSchema>;
 
 export const validate = {
   meta: (data: unknown) => MetaSchema.safeParse(data),
@@ -178,5 +178,5 @@ export const validate = {
   basalSegment: (data: unknown) => BasalSegmentSchema.safeParse(data),
   basalArray: (data: unknown) => BasalArraySchema.safeParse(data),
   day: (data: unknown) => DaySchema.safeParse(data),
-  diabetesData: (data: unknown) => DiabetesDataSchema.safeParse(data),
+  nightfluxReport: (data: unknown) => NightfluxReportSchema.safeParse(data),
 };

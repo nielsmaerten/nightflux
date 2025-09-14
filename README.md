@@ -62,7 +62,7 @@ npx nightflux-core -u https://ns.example?token=... -d 30 --pretty -o out/report.
 
 ## What It Returns
 
-The function returns an object compliant with the `DiabetesDataSchema` defined in `src/domain/schema.ts`. Top‑level fields:
+The function returns an object compliant with the `NightfluxReportSchema` defined in `src/domain/schema.ts`. Top‑level fields:
 
 - meta: schema metadata
   - `schema_version`: number (currently `1`)
@@ -114,7 +114,7 @@ The function returns an object compliant with the `DiabetesDataSchema` defined i
 
 - `buildNightscoutExport(url: string, start: string, end: string)`
   - Produces the export described above.
-  - Validates the result against `DiabetesDataSchema` before returning.
+  - Validates the result against `NightfluxReportSchema` before returning.
 - `collectExport(url: string, start: string, end: string)`
   - Alias: same as `buildNightscoutExport`.
 

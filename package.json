@@ -22,6 +22,7 @@
     "format:check": "prettier --check src",
     "prepare": "npm run build",
     "prepack": "npm run build",
+    "generate:schema": "tsx src/domain/json-schema.ts > src/domain/nightflux-report.schema.json",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc -p tsconfig.json --noEmit"
@@ -37,7 +38,8 @@
     "vitest": "^3.2.4"
   },
   "files": [
-    "dist"
+    "dist",
+    "src/domain/nightflux-report.schema.json"
   ],
   "dependencies": {
     "axios": "^1.11.0",
@@ -46,6 +48,7 @@
     "date-fns-tz": "^3.1.3",
     "dotenv": "^16.6.1",
     "proxy-agent": "^6.5.0",
+    "tsx": "^4.20.5",
     "typescript": "^5.9.2",
     "zod": "^4.1.0"
   }

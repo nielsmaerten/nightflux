@@ -2,7 +2,7 @@ import 'dotenv/config';
 import { describe, expect, it } from 'vitest';
 import Nightscout from '../../clients/nightscout.js';
 import ProfileClient from './profiles';
-import { DiabetesData, ProfilesSchema } from '../../domain/schema';
+import { ProfilesSchema } from '../../domain/schema';
 
 describe('Nightscout profiles (integration)', () => {
   it('fetches profiles active in the last 30 days', async () => {
