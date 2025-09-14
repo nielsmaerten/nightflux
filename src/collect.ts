@@ -1,12 +1,12 @@
-import Nightscout from './clients/nightscout';
-import CgmClient from './resources/cgm/cgm';
-import CarbsClient from './resources/carbs/carbs';
-import BolusClient from './resources/bolus/bolus';
-import ProfileClient from './resources/profiles/profiles';
-import ActiveProfileClient from './resources/profiles/activeProfileClient';
-import BasalClient from './resources/basal/basal';
-import { toUtcRange } from './utils/timezones';
-import { DiabetesDataSchema, type DiabetesData } from './domain/schema';
+import Nightscout from './clients/nightscout.js';
+import CgmClient from './resources/cgm/cgm.js';
+import CarbsClient from './resources/carbs/carbs.js';
+import BolusClient from './resources/bolus/bolus.js';
+import ProfileClient from './resources/profiles/profiles.js';
+import ActiveProfileClient from './resources/profiles/activeProfileClient.js';
+import BasalClient from './resources/basal/basal.js';
+import { toUtcRange } from './utils/timezones.js';
+import { DiabetesDataSchema, type DiabetesData } from './domain/schema.js';
 import { parse, isValid, addDays, format } from 'date-fns';
 
 /**

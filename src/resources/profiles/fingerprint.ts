@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import type { Profile, ProfileBlock } from './profiles';
+import type { Profile, ProfileBlock } from './profiles.js';
 
 function round(n: number, dp = 4): number {
   const f = Math.pow(10, dp);
@@ -27,4 +27,3 @@ export function fingerprintBlocks(blocks: ProfileBlock[]): string {
 export function fingerprintProfile(profile: Profile): string {
   return fingerprintBlocks(profile.blocks);
 }
-

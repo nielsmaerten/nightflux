@@ -1,14 +1,14 @@
-import { NightscoutClientBase } from 'src/clients/nightscout';
-import { ActiveProfileSchema } from '../../domain/schema';
+import { NightscoutClientBase } from '../../clients/nightscout.js';
+import { ActiveProfileSchema } from '../../domain/schema.js';
 import {
   resolveTreatmentTimestampMs,
   resolveProfileIdFromTreatment,
   resolveProfilePercent,
   dedupConsecutiveStates,
-} from '../../utils/nightscout-utils';
-import { validateEachWithSchema } from '../../utils/common-utils';
-import { NsTreatment } from 'src/domain/ns-types';
-import { DEFAULT_STRATEGIES, type QueryStrategy } from '../../utils/pagination-utils';
+} from '../../utils/nightscout-utils.js';
+import { validateEachWithSchema } from '../../utils/common-utils.js';
+import { NsTreatment } from '../../domain/ns-types.js';
+import { DEFAULT_STRATEGIES, type QueryStrategy } from '../../utils/pagination-utils.js';
 
 export type ActiveProfile = { id: string; pct: number; start: number };
 

@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import { describe, expect, it } from 'vitest';
-import Nightscout from '../../clients/nightscout';
+import Nightscout from '../../clients/nightscout.js';
 import CgmClient from './cgm';
 import { CgmArraySchema } from '../../domain/schema';
 

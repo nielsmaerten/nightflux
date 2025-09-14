@@ -1,12 +1,12 @@
-import Nightscout from '../../clients/nightscout';
-import { CarbsArraySchema } from '../../domain/schema';
-import { resolveTreatmentTimestampMs } from '../../utils/nightscout-utils';
+import Nightscout from '../../clients/nightscout.js';
+import { CarbsArraySchema } from '../../domain/schema.js';
+import { resolveTreatmentTimestampMs } from '../../utils/nightscout-utils.js';
 import {
   validateTimeRange,
   validateWithSchema,
   dedupByKey,
   sortByTimestamp,
-} from '../../utils/common-utils';
+} from '../../utils/common-utils.js';
 import {
   buildCursorParams,
   initializeCursor,
@@ -16,7 +16,7 @@ import {
   DEFAULT_STRATEGIES,
   type TimeWindow,
   type QueryStrategy,
-} from '../../utils/pagination-utils';
+} from '../../utils/pagination-utils.js';
 
 type NsTreatment = {
   carbs?: number; // grams

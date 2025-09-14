@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { toUtcRange } from './timezones';
+import { toUtcRange } from './timezones.js';
 
 describe('toUtcRange (timezone helper)', () => {
   it('computes exact 24h for UTC timezone single day', () => {

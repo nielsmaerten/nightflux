@@ -5,9 +5,9 @@ import { fileURLToPath } from 'node:url';
 import { addDays, format, parse } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
 import { Command } from 'commander';
-import Nightscout from './clients/nightscout';
-import ProfileClient from './resources/profiles/profiles';
-import { collectExport } from './collect';
+import Nightscout from './clients/nightscout.js';
+import ProfileClient from './resources/profiles/profiles.js';
+import { collectExport } from './collect.js';
 
 function readPackageVersion(): string {
   try {

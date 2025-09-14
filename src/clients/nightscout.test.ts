@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import { describe, expect, it } from 'vitest';
-import NsClient from './nightscout';
+import NsClient from './nightscout.js';
 
 describe('Nightscout Client', () => {
   it('returns a reusable Nightscout Axios Instance', () => {

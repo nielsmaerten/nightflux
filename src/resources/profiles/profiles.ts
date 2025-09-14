@@ -1,6 +1,6 @@
-import Nightscout from '../../clients/nightscout';
-import { ProfilesSchema } from '../../domain/schema';
-import { validateWithSchema, validateTimeRangeStrict } from '../../utils/common-utils';
+import Nightscout from '../../clients/nightscout.js';
+import { ProfilesSchema } from '../../domain/schema.js';
+import { validateWithSchema, validateTimeRangeStrict } from '../../utils/common-utils.js';
 
 // Types for Nightscout profile API response (subset we use)
 type NsBasalEntry = { time: string; timeAsSeconds: number; value: number };

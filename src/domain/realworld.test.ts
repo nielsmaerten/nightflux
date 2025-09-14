@@ -1,11 +1,11 @@
 import 'dotenv/config';
 import { beforeAll, describe, expect, it } from 'vitest';
-import Nightscout from '../clients/nightscout';
-import CarbsClient from '../resources/carbs/carbs';
-import BolusClient from '../resources/bolus/bolus';
-import ProfileClient from '../resources/profiles/profiles';
-import BasalClient from '../resources/basal/basal';
-import { toUtcRange } from '../utils/timezones';
+import Nightscout from '../clients/nightscout.js';
+import CarbsClient from '../resources/carbs/carbs.js';
+import BolusClient from '../resources/bolus/bolus.js';
+import ProfileClient from '../resources/profiles/profiles.js';
+import BasalClient from '../resources/basal/basal.js';
+import { toUtcRange } from '../utils/timezones.js';
 
 // Expected output:
 const days: Record<string, { carbs: number; bolus: number; basal: number }> = {

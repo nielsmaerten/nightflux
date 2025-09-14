@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import { describe, it } from 'vitest';
 import { formatInTimeZone } from 'date-fns-tz';
-import collectExport from './collect';
+import collectExport from './collect.js';
 
 describe('Collect Export (integration)', () => {
   it(
@@ -35,4 +35,3 @@ describe('Collect Export (integration)', () => {
     180_000,
   );
 });
-

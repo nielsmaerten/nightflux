@@ -1,4 +1,4 @@
-import { NsTreatment } from 'src/domain/ns-types';
+import { NsTreatment } from '../domain/ns-types.js';
 
 /**
  * Generic utility to resolve a value from multiple candidate fields.

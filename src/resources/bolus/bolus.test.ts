@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import { describe, expect, it } from 'vitest';
-import Nightscout from '../../clients/nightscout';
+import Nightscout from '../../clients/nightscout.js';
 import BolusClient from './bolus';
 import { BolusArraySchema } from '../../domain/schema';
 

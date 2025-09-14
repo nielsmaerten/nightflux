@@ -1,4 +1,4 @@
-import Nightscout from '../../clients/nightscout';
+import Nightscout from '../../clients/nightscout.js';
 import { addDays, addHours, parse, isValid, format } from 'date-fns';
 import { fromZonedTime, formatInTimeZone } from 'date-fns-tz';
 
