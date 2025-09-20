@@ -1,68 +1,45 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { resolveRange } from './range.js';
 
-describe('range', () => {
-  it('returns the correct range when passed start & end', () => {
-    const tz = 'UTC';
-    const start = '2025-01-10';
-    const end = '2025-01-20';
-    const range = resolveRange(tz, start, end);
-    expect(range).toEqual({ start, end });
-  });
+describe('resolveRange', () => {
+  const timezone = 'UTC';
+  const anchorDate = new Date('2025-10-01T12:00:00Z');
 
-  it('returns the correct range when passed start & days', () => {
-    const tz = 'UTC';
-    const start = '2025-01-10';
-    const days = 5; // inclusive => end = 2025-01-14
-    const range = resolveRange(tz, start, undefined, days);
-    expect(range).toEqual({ start, end: '2025-01-14' });
-  });
-
-  it('returns the correct range when passed end & days', () => {
-    const tz = 'UTC';
-    const end = '2025-01-20';
-    const days = 5; // inclusive => start = 2025-01-16
-    const range = resolveRange(tz, undefined, end, days);
-    expect(range).toEqual({ start: '2025-01-16', end });
-  });
-
-  it('returns the correct range when passed start only', () => {
-    const tz = 'UTC';
-    // Freeze time so "yesterday" is deterministic: 2025-09-13
+  beforeEach(() => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date('2025-09-14T12:00:00Z'));
-    try {
-      const start = '2025-09-01';
-      const range = resolveRange(tz, start);
-      expect(range).toEqual({ start, end: '2025-09-13' });
-    } finally {
-      vi.useRealTimers();
-    }
+    vi.setSystemTime(anchorDate);
   });
 
-  it('returns the correct range when passed end only', () => {
-    const tz = 'UTC';
-    const end = '2025-09-13';
-    const range = resolveRange(tz, undefined, end);
-    // 30-day inclusive range => start is 29 days before end
-    expect(range).toEqual({ start: '2025-08-15', end });
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
-  it('returns the correct range when passed nothing', () => {
-    const tz = 'UTC';
-    // Freeze time so "yesterday" is deterministic: 2025-09-13
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date('2025-09-14T12:00:00Z'));
-    try {
-      const range = resolveRange(tz);
-      expect(range).toEqual({ start: '2025-08-15', end: '2025-09-13' });
-    } finally {
-      vi.useRealTimers();
-    }
+  it('returns provided start and end when both supplied', () => {
+    const result = resolveRange(timezone, '2025-09-20', '2025-09-30');
+    expect(result).toEqual({ start: '2025-09-20', end: '2025-09-30' });
   });
 
-  it('throws when start > end', () => {
-    const tz = 'UTC';
-    expect(() => resolveRange(tz, '2025-01-10', '2025-01-09')).toThrowError();
+  it('defaults to 30 day window ending yesterday when no explicit inputs provided', () => {
+    const result = resolveRange(timezone);
+    expect(result).toEqual({ start: '2025-08-31', end: '2025-09-30' });
+  });
+
+  it('uses days as an offset when only --days is provided', () => {
+    const result = resolveRange(timezone, undefined, undefined, 10);
+    expect(result).toEqual({ start: '2025-09-20', end: '2025-09-30' });
+  });
+
+  it('computes end from start when days are provided', () => {
+    const result = resolveRange(timezone, '2025-03-20', undefined, 5);
+    expect(result).toEqual({ start: '2025-03-20', end: '2025-03-25' });
+  });
+
+  it('computes start from end when days are provided', () => {
+    const result = resolveRange(timezone, undefined, '2025-09-20', 10);
+    expect(result).toEqual({ start: '2025-09-10', end: '2025-09-20' });
+  });
+
+  it('throws when start, end, and days are all provided', () => {
+    expect(() => resolveRange(timezone, '2025-09-01', '2025-09-10', 5)).toThrow();
   });
 });

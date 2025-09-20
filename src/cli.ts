@@ -2,12 +2,12 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { Command } from 'commander';
+import { Command, Option } from 'commander';
 import { collectExport } from './collect.js';
-import { stringify as yamlStringify } from 'yaml';
+import type { NightfluxReport } from './domain/schema.js';
 import logger from './utils/logger.js';
 import { resolveRange, resolveTimezone } from './utils/range.js';
-import { readSchemaMarkdown, toYamlCommentBlock } from './utils/yaml-header.js';
+import { writeOutput } from './utils/write-output.js';
 
 function readPackageVersion(): string {
   try {
@@ -24,20 +24,19 @@ function readPackageVersion(): string {
   }
 }
 
-// Range utilities moved to src/utils/range.ts
+type RunOptions = {
+  url?: string;
+  start?: string;
+  end?: string;
+  days?: string | number;
+  output?: string;
+  pretty?: boolean;
+  format?: 'json' | 'yaml';
+  quiet?: boolean;
+  systemMessage?: boolean;
+};
 
-async function run(
-  urlArg: string | undefined,
-  opts: {
-    url?: string;
-    start?: string;
-    end?: string;
-    days?: string | number;
-    out?: string;
-    pretty?: boolean;
-    yaml?: boolean;
-  },
-) {
+async function run(urlArg: string | undefined, opts: RunOptions) {
   const url = urlArg || opts.url || process.env.NIGHTSCOUT_URL;
   if (!url)
     throw new Error('Nightscout URL is required. Provide [url], --url, or NIGHTSCOUT_URL env.');
@@ -53,43 +52,55 @@ async function run(
   const tz = await resolveTimezone(url);
   const { start, end } = resolveRange(tz, opts.start, opts.end, daysNum);
 
-  const defaultOut = opts.yaml
-    ? `ns-report-${start}-${end}.yaml`
-    : `ns-report-${start}-${end}.json`;
-  const outPath = opts.out ? path.resolve(opts.out) : path.resolve(process.cwd(), defaultOut);
+  const format = opts.format === 'json' ? 'json' : 'yaml';
+  const outPath = resolveOutputPath({ format, start, end, requested: opts.output });
 
-  const data = await collectExport(url, start, end);
-  let content = opts.yaml
-    ? yamlStringify(data)
-    : opts.pretty
-      ? JSON.stringify(data, null, 2)
-      : JSON.stringify(data);
-  if (opts.yaml) {
-    const md = readSchemaMarkdown();
-    if (md) {
-      const header = toYamlCommentBlock(md);
-      content = `${header}\n\n${content}`;
-    }
-  }
-  fs.mkdirSync(path.dirname(outPath), { recursive: true });
-  logger.info('Writing export file');
-  fs.writeFileSync(outPath, content + '\n', 'utf8');
-  logger.info(`Wrote ${outPath}`);
+  const report = await collectExport(url, start, end);
+  const includeSystemMessage = opts.systemMessage !== false;
+  writeReportFile(report, {
+    outputFile: outPath,
+    format,
+    pretty: opts.pretty,
+    systemMessage: includeSystemMessage,
+  });
+}
+
+type WriteReportParams = {
+  outputFile: string;
+  format: 'json' | 'yaml';
+  pretty?: boolean;
+  systemMessage?: boolean;
+};
+
+function resolveOutputPath(options: {
+  format: 'json' | 'yaml';
+  start: string;
+  end: string;
+  requested?: string;
+}): string {
+  if (options.requested) return path.resolve(options.requested);
+  const basename = `ns-report-${options.start}-${options.end}.${options.format}`;
+  return path.resolve(process.cwd(), basename);
+}
+
+function writeReportFile(report: NightfluxReport, params: WriteReportParams): void {
+  writeOutput(report, params);
 }
 
 const program = new Command();
 program
   .name('nightflux-core')
-  .description('Export Nightscout data to a JSON report')
+  .description('Export Nightscout data to a report file (YAML by default)')
   .version(readPackageVersion(), '-V, --version', 'output the version number')
   .argument('[url]', 'Nightscout base URL with ?token=...')
   .option('-u, --url <url>', 'Nightscout base URL with ?token=...')
   .option('-s, --start <YYYY-MM-DD>', 'Start date')
   .option('-e, --end <YYYY-MM-DD>', 'End date')
   .option('-d, --days <n>', 'Number of days (overrides one side)')
-  .option('-o, --out <file>', 'Output file (default ns-report-START-END.json)')
-  .option('--pretty', 'Pretty-print JSON (2 spaces)')
-  .option('--yaml', 'Export YAML instead of JSON')
+  .option('-o, --output <file>', 'Output file (default ns-report-START-END.yaml)')
+  .addOption(new Option('-f, --format <type>', 'Output format').choices(['json', 'yaml']).default('yaml'))
+  .option('-p, --pretty', 'Pretty-print JSON (2 spaces)')
+  .option('-x, --no-system-message', 'Omit system_message field in the export')
   .option('-q, --quiet', 'Suppress logs')
   .showHelpAfterError()
   .action(async (urlArg: string | undefined, opts: any) => {

@@ -1,18 +1,56 @@
-# nightflux-core
+# Nightflux
 
-An unopinionated, TypeScript-first core library for exporting diabetes data from Nightscout. It composes specialized clients (CGM, carbs, bolus, profiles, basal) into a single, schema‑validated export object suitable for downstream analytics and integrations.
+Analyze your Nightscout data with the help of AI.
 
-## Install
+Nightflux produces an AI-optimized, self-contained report of your Nightscout history. 
+Share the report with an AI like ChatGPT*, and it will answer your questions, spot trends & analyze patterns for you.
 
-Install via npm (Node 18.18+):
+\* Model recommendation: _"GPT-5 Thinking"_  _(September 2025)_
 
+## Quick start
+
+- Visit https://nightflux.niels.me
+- Enter your Nightscout URL & token
+- Select a date range
+- Download your AI-ready report
+
+## CLI Usage
+
+Install or run via npx (Node 18.18+):
+
+```bash
+# Using npx from the registry after publish
+npx github:nielsmaerten:nightflux-core https://my-nightscout.com?token=abc123 [options]
+
+# Or, install for easy access:
+npm i -g github:nielsmaerten:nightflux-core
+# Then:
+npx nightflux-core [url] [options]
 ```
-npm install nightflux-core
-```
 
-## Quick Start
+### Options
 
-```
+| Option | Shortcut | Description | Example |
+| --- | ---: | --- | --- |
+| url (positional) | — | Nightscout base URL including readonly token as query param (required) | https://my.ns.example?token=TOKEN |
+| --start <date> | -s | Start date (inclusive) in YYYY-MM-DD | --start 2025-08-10 |
+| --end <date> | -e | End date (inclusive) in YYYY-MM-DD | --end 2025-09-10 |
+| --output <file> | -o | Write export to file (defaults to `dateStart-dateEnd.yaml`) | -o export.yaml |
+| --format <type> | -f | Output format: json or yaml (defaults) | --format json |
+| --pretty | -p | Enable human readable output (json only) | --pretty |
+| --verbose | -v | Enable verbose logging | -v |
+| --quiet | -q | Minimal output (overrides verbose) | -q |
+| --help | -h | Show help and exit | -h |
+| --version | -V | Show CLI version and exit | --version |
+
+
+---
+
+## Library usage (advanced)
+
+```ts
+// Install with: 
+// npm i github:nielsmaerten:nightflux-core
 import { buildNightscoutExport } from 'nightflux-core';
 
 const url = 'https://your.ns.example?token=READONLY_TOKEN';
@@ -25,42 +63,7 @@ console.log('days:', data.days.length);
 console.log('profiles:', data.profiles.length);
 ```
 
-Notes:
-- The `url` must include a `token` query parameter (readonly token recommended).
-- Dates are local calendar dates (`YYYY-MM-DD`); the library determines the timezone from the active profile.
-
-## CLI Usage
-
-Install or run via npx (Node 18.18+):
-
-```
-# Using npx from the registry after publish
-npx nightflux-core [url] [options]
-
-# Or install locally and use the bin
-npm install nightflux-core
-npx nightflux-core [url] -d 30 --pretty
-```
-
-Options:
-
-- `-u, --url <url>`: Nightscout base URL with `?token=...`
-- `-s, --start <YYYY-MM-DD>`: Start date
-- `-e, --end <YYYY-MM-DD>`: End date
-- `-d, --days <n>`: Number of days (derives the other side)
-- `-o, --out <file>`: Output file path (default `ns-report-START-END.json`)
-- `--pretty`: Pretty-print JSON (2 spaces)
-- `-h, --help`: Show help
-- `-V, --version`: Show version
-
-Examples:
-
-```
-npx nightflux-core https://ns.example?token=... -s 2025-09-01 -e 2025-09-07
-npx nightflux-core -u https://ns.example?token=... -d 30 --pretty -o out/report.json
-```
-
-## What It Returns
+## Schema description
 
 The function returns an object compliant with the `NightfluxReportSchema` defined in `src/domain/schema.ts`. Top‑level fields:
 
@@ -117,11 +120,6 @@ The function returns an object compliant with the `NightfluxReportSchema` define
   - Validates the result against `NightfluxReportSchema` before returning.
 - `collectExport(url: string, start: string, end: string)`
   - Alias: same as `buildNightscoutExport`.
-
-## Error Handling
-
-- Throws on invalid date formats, start > end, or invalid timezone.
-- Throws if Nightscout access fails or if the final object fails schema validation.
 
 ## Development
 

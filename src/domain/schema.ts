@@ -5,6 +5,7 @@ import { z } from 'zod';
  */
 export interface NightfluxReport {
   $schema?: string; // URL to the JSON Schema
+  system_message?: string;
   meta: {
     schema_version: number;
     generated_at: number; // epoch seconds
@@ -152,6 +153,7 @@ export const DaySchema = z
 export const NightfluxReportSchema = z
   .object({
     $schema: z.url().optional(),
+    system_message: z.string().optional(),
     meta: MetaSchema,
     profiles: ProfilesSchema,
     notes: z.array(NoteSchema).optional(),

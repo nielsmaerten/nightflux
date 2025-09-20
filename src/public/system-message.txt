@@ -1,4 +1,6 @@
-This file is a structured diabetes data export in YAML.
+AI Agents, please read the following carefully:
+
+This file contains a structured diabetes data export in YAML/JSON.
 
 ### Structure
 
