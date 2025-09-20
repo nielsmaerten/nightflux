@@ -6,10 +6,10 @@ import type { NightfluxReport } from '../domain/schema.js';
 function resolveCandidates(): string[] {
   const here = path.dirname(fileURLToPath(import.meta.url));
   return [
-    path.resolve(here, '../public/system-message.txt'),
-    path.resolve(here, '../../src/public/system-message.txt'),
-    path.resolve(process.cwd(), 'src/public/system-message.txt'),
-    path.resolve(process.cwd(), 'system-message.txt'),
+    path.resolve(here, '../public/system-message.md'),
+    path.resolve(here, '../../src/public/system-message.md'),
+    path.resolve(process.cwd(), 'src/public/system-message.md'),
+    path.resolve(process.cwd(), 'system-message.md'),
   ];
 }
 

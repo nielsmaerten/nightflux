@@ -127,19 +127,36 @@ document.addEventListener('DOMContentLoaded', () => {
   startInput.value = formatDate(start);
   endInput.value = formatDate(end);
 
-  // eslint-disable-next-line no-undef
-  const picker = new Litepicker({
-    element: startInput,
-    elementEnd: endInput,
-    singleMode: false,
-    format: 'YYYY-MM-DD',
-    startDate: start,
-    endDate: end,
-    numberOfMonths: window.innerWidth < 640 ? 1 : 2,
-    numberOfColumns: window.innerWidth < 640 ? 1 : 2,
-    mobileFriendly: true,
-    autoApply: true,
-    tooltipText: { one: 'day', other: 'days' },
+  const syncDateConstraints = () => {
+    const startValue = startInput.value;
+    const endValue = endInput.value;
+    endInput.min = startValue || '';
+    startInput.max = endValue || '';
+  };
+
+  const enforceRangeOrder = (changedInput) => {
+    const startValue = startInput.value;
+    const endValue = endInput.value;
+    if (!startValue || !endValue) return;
+    if (startValue <= endValue) return;
+
+    if (changedInput === startInput) {
+      endInput.value = startValue;
+    } else {
+      startInput.value = endValue;
+    }
+  };
+
+  syncDateConstraints();
+
+  startInput.addEventListener('change', () => {
+    enforceRangeOrder(startInput);
+    syncDateConstraints();
+  });
+
+  endInput.addEventListener('change', () => {
+    enforceRangeOrder(endInput);
+    syncDateConstraints();
   });
 
   if (submitBtn) {

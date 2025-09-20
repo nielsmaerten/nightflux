@@ -1,87 +1,90 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="color-scheme" content="dark light" />
-    <title>Nightflux</title>
-    <!-- Classless, mobile-friendly styles via CDN -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/dark.min.css" />
-    <!-- Date range picker styles -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/litepicker/dist/css/litepicker.css" />
-    <link rel="stylesheet" href="./styles.css" />
-  </head>
 
-  <body>
-    <div id="particles-js" aria-hidden="true"></div>
-    <main>
-      <h1>Nightflux</h1>
-      <p class="muted">Your Nightscout history, ready for AI.</p>
-      <hr />
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark light" />
+  <title>Nightflux</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/dark.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
 
-      <form id="nf-form">
-        <label for="url"><strong>Nightscout URL</strong></label>
-        <input
-          id="url"
-          name="url"
-          type="url"
-          placeholder="https://my-nightscout-site.com?token=abc123"
-          required
-        />
-        <p class="note">Enter your full Nightscout URL, including a token with read permissions.</p>
+<body>
+  <div id="particles-js" aria-hidden="true"></div>
+  <main>
+    <h1>Nightflux</h1>
+    <p class="muted">Analyze your Nightscout data with the help of AI.</p>
+    <hr />
 
-        <label for="date-start"><strong>Range</strong></label>
-        <div class="grid-two">
-          <input
-            id="date-start"
-            name="start"
-            type="text"
-            placeholder="Start date"
-            autocomplete="off"
-          />
-          <input id="date-end" name="end" type="text" placeholder="End date" autocomplete="off" />
-        </div>
-        <p class="note">Select a date range for the report.</p>
+    <form id="nf-form">
+      <label for="url"><strong>Nightscout URL</strong></label>
+      <input id="url" name="url" type="url" placeholder="https://my-nightscout-site.com?token=abc123" required />
+      <p class="note">Enter your full Nightscout URL, including a token with read permissions.</p>
 
-        <div class="actions">
-          <button id="submit" type="submit">Build Report</button>
-          <span class="status" id="status" aria-live="polite"></span>
-        </div>
-      </form>
+      <label for="date-start"><strong>Range</strong></label>
+      <div class="grid-two">
+        <input id="date-start" name="start" type="text" placeholder="Start date" autocomplete="off" />
+        <input id="date-end" name="end" type="text" placeholder="End date" autocomplete="off" />
+      </div>
+      <p class="note">Select a date range for the report.</p>
 
-      <hr />
-      <h3>Why this tool?</h3>
-      <p>
-        Nightflux builds a single, portable file of your Nightscout data for the dates you choose.
-        This file is self-contained, so it includes everything needed to analyze that period without
-        needing access to Nightscout.
-      </p>
-      <p>
-        Give the file to an AI like ChatGPT and it can answer questions, run its own queries, draw
-        charts, and summarize patterns. The file also carries a short, built-in guide that tells the
-        AI how to use it.
-      </p>
+      <div class="actions">
+        <button id="submit" type="submit">Build Report</button>
+        <span class="status" id="status" aria-live="polite"></span>
+      </div>
+    </form>
+
+    <hr />
+    <h3>How do I use this?</h3>
+    <p>
+      Nightflux produces an AI-optimized, self-contained report of your Nightscout history.
+    </p>
+    <p>
+      Upload the report file to ChatGPT, and ask it to "<strong>Read the system message in this file</strong>".
+    </p>
+    <p>
+      From there, you can ask it questions like "<em>Summarize my last 30 days</em>" or "<em>What patterns do
+        you see in my data?</em>".
+    </p>
+
+
+
+    <footer>
       <p>
         Your data is removed immediately after the report is created. If you prefer to keep
         everything on your own computer, you can
-        <a
-          href="https://github.com/nielsmaerten/nightscout-core"
-          target="_blank"
-          rel="noopener noreferrer"
-          >generate</a
-        >
+        <a href="https://github.com/nielsmaerten/nightscout-core" target="_blank" rel="noopener noreferrer">generate</a>
         the same report from the command line.
       </p>
+      <small>Tip: Your URL is remembered locally on this device.</small>
+    </footer>
+  </main>
+  <!-- Particles background (global `particlesJS`) -->
+  <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // Initialize datepickers on the start/end fields. Keep allowInput so users can type.
+      flatpickr('#date-start', {
+        dateFormat: 'Y-m-d',
+        altInput: true,
+        altFormat: 'F j, Y',
+        allowInput: true,
+        maxDate: 'today'
+      });
+      flatpickr('#date-end', {
+        dateFormat: 'Y-m-d',
+        altInput: true,
+        altFormat: 'F j, Y',
+        allowInput: true,
+        maxDate: 'today'
+      });
+    });
+  </script>
+  <script src="./app.js"></script>
+</body>
 
-      <footer>
-        <small>Tip: Your URL is remembered locally on this device.</small>
-      </footer>
-    </main>
-
-    <!-- Date range picker (global `Litepicker`) -->
-    <script src="https://cdn.jsdelivr.net/npm/litepicker/dist/litepicker.js"></script>
-    <!-- Particles background (global `particlesJS`) -->
-    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
-    <script src="./app.js"></script>
-  </body>
 </html>
