@@ -36,6 +36,12 @@ nightflux <url> [options]
 ## Export last 30 days to YAML (default)
 nightflux https://your-nightscout.site?token=TOKEN
 
+## Remember your Nightscout URL for next time
+nightflux --remember https://your-nightscout.site?token=TOKEN
+nightflux # URL auto-filled from previous run
+# Forget the remembered URL
+nightflux --remember
+
 ## Export a specific date range to JSON
 nightflux https://your-nightscout.site?token=TOKEN --start 2024-05-01 --end 2024-05-31 --format json
 
@@ -53,6 +59,7 @@ nightflux --help
 | --output <file> | -o | Write export to file (defaults to `dateStart-dateEnd.yaml`) | -o export.yaml |
 | --format <type> | -f | Output format: json or yaml (defaults) | --format json |
 | --pretty | -p | Enable human readable output (json only) | --pretty |
+| --remember | -r | Store the Nightscout URL (or clear it when no URL is provided) | --remember |
 | --quiet | -q | Minimal output (overrides verbose) | -q |
 | --help | -h | Show help and exit | -h |
 | --version | -V | Show CLI version and exit | --version |
