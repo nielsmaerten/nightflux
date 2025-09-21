@@ -45,7 +45,7 @@
     "dist"
   ],
   "dependencies": {
-    "@fastify/static": "^7.0.4",
+    "@fastify/static": "^8.0.0",
     "axios": "^1.11.0",
     "commander": "^12.1.0",
     "date-fns": "^3.6.0",
