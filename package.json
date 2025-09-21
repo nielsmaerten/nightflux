@@ -16,12 +16,12 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "npx tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json",
     "clean": "rimraf dist",
     "cli": "tsx src/cli.ts",
     "format": "prettier --write src",
     "format:check": "prettier --check src",
-    "prepare": "npm run build",
+    "prepublishOnly": "npm run -s build",
     "prepack": "npm run build",
     "generate:schema": "tsx src/domain/json-schema.ts > src/domain/nightflux-report.schema.json",
     "serve": "tsx src/serve.ts",
