@@ -20,6 +20,7 @@ Extra notes:
 Schema definition:
 
 (top level)
+
 - meta:
   - schema_version: format version number
   - utc_generated_time: file creation timestamp
