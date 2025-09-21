@@ -68,37 +68,40 @@ console.log('profiles:', data.profiles.length);
 The function returns an object compliant with the `NightfluxReportSchema` defined in `src/domain/schema.ts`. Top‑level fields:
 
 - meta: schema metadata
-  - `schema_version`: number (currently `1`)
-  - `generated_at`: epoch seconds when the export was produced
+  - `schema_version`: number (currently `2`)
+  - `utc_generated_time`: epoch seconds when the export was produced
+  - `local_start`: local date string that seeded the export range (`YYYY-MM-DD`)
+  - `local_end`: local date string that closed the export range (`YYYY-MM-DD`)
 - profiles: list of basal profiles active in the timeframe
   - `id`: stable identifier in the form `${docId}:${name}` (ties a profile name to its Nightscout profile document)
   - `name`: human name of the profile (editable in Nightscout)
-  - `tz`: IANA timezone name used by this profile
+  - `timezone`: IANA timezone name used by this profile
   - `blocks`: basal blocks
-    - `m`: minutes since local midnight when the block starts (0–1440)
-    - `iu_h`: basal rate in U/h while the block is active
+    - `minutes_past_midnight`: minutes since local midnight when the block starts (0–1440)
+    - `units_hourly`: basal rate in U/h while the block is active
 - days: array of per‑day data for each calendar date in `[start..end]`
   - `date`: day metadata
     - `timezone`: IANA timezone resolved from the latest active profile
-    - `t`: epoch seconds at local midnight of the day (start boundary)
+    - `utc_midnight`: epoch seconds at local midnight of the day (start boundary)
+    - `local_midnight`: ISO string for the same instant rendered in the profile timezone
   - `activeProfiles`: profile timeline within that local day
     - `id`: stable profile id (`${docId}:${name}`) mapped based on the profile document active at the event time
     - `pct`: active profile percentage (e.g., 100 for default)
-    - `start`: epoch seconds when this profile state becomes active
+    - `utc_activation_time`: epoch seconds when this profile state becomes active
   - `cgm`: CGM readings within the day
-    - `t`: epoch seconds
+    - `utc_time`: epoch seconds
     - `mgDl`: glucose value
   - `carbs`: carbohydrate entries
-    - `t`: epoch seconds
-    - `g`: grams
+    - `utc_time`: epoch seconds
+    - `grams`: grams of carbohydrate
   - `bolus`: insulin bolus entries
-    - `t`: epoch seconds
-    - `iu`: units (immediate + extended when applicable)
+    - `utc_time`: epoch seconds
+    - `units`: units (immediate + extended when applicable)
   - `basal`: basal segments covering the day (contiguous intervals)
-    - `t`: epoch seconds when the segment starts
-    - `iu_sum`: total insulin delivered during the segment
-    - `iu_h`: segment rate in U/h
-    - `d`: duration of the segment in seconds
+    - `utc_time`: epoch seconds when the segment starts
+    - `units_total`: total insulin delivered during the segment
+    - `units_hourly`: segment rate in U/h
+    - `duration`: duration of the segment in seconds
     - `type`: classifier label (e.g., `baseline`, `temp-absolute`, `temp-percent`, `combo-relative`, `baseline+combo`)
 
 ### Basal Calculation Policy

@@ -5,7 +5,7 @@ import {
   validateTimeRange,
   validateWithSchema,
   dedupByKey,
-  sortByTimestamp,
+  sortByUtcTime,
 } from '../../utils/common-utils.js';
 import {
   buildCursorParams,
@@ -28,7 +28,7 @@ type NsTreatment = {
   isValid?: boolean;
 };
 
-export type BolusEntry = { t: number; iu: number };
+export type BolusEntry = { utc_time: number; units: number };
 
 function totalInsulin(treatment: NsTreatment): number {
   if (treatment.isValid === false) return 0;
@@ -67,9 +67,9 @@ export default class BolusClient {
     // Dedup and sort
     const deduped = dedupByKey(
       aggregated,
-      (entry) => entry.t * 1_000_000 + Math.round(entry.iu * 1000),
+      (entry) => entry.utc_time * 1_000_000 + Math.round(entry.units * 1000),
     );
-    const sorted = sortByTimestamp(deduped);
+    const sorted = sortByUtcTime(deduped);
 
     return validateWithSchema(sorted, BolusArraySchema, 'bolus');
   }
@@ -96,7 +96,9 @@ export default class BolusClient {
           .map((treatment) => {
             const iu = totalInsulin(treatment);
             const ms = resolveTreatmentTimestampMs(treatment);
-            return iu > 0 && ms ? { t: Math.floor(ms / 1000), iu } : null;
+            return iu > 0 && ms
+              ? { utc_time: Math.floor(ms / 1000), units: iu }
+              : null;
           })
           .filter((entry): entry is BolusEntry => entry !== null),
       );
@@ -125,7 +127,7 @@ export default class BolusClient {
         if (ms < startMs || ms > endMs) continue;
         const iu = totalInsulin(treatment);
         if (iu <= 0) continue;
-        out.push({ t: Math.floor(ms / 1000), iu });
+        out.push({ utc_time: Math.floor(ms / 1000), units: iu });
         oldest = updateCursor(strategy, oldest, ms);
       }
 

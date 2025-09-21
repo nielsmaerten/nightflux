@@ -18,14 +18,14 @@ function initParticles() {
         random: true,
         straight: false,
         out_mode: 'out',
-        attract: { enable: false }
-      }
+        attract: { enable: false },
+      },
     },
     interactivity: {
       detect_on: 'canvas',
-      events: { onhover: { enable: false }, onclick: { enable: false }, resize: true }
+      events: { onhover: { enable: false }, onclick: { enable: false }, resize: true },
     },
-    retina_detect: true
+    retina_detect: true,
   });
 }
 
@@ -67,7 +67,8 @@ function toggleBlackholeEffect(enabled) {
       const scaleY = canvasEl.height / canvasRect.height;
       const targetX = (buttonRect.left + buttonRect.width / 2 - canvasRect.left) * scaleX;
       const targetY = (buttonRect.top + buttonRect.height / 2 - canvasRect.top) * scaleY;
-      const threshold = Math.max(buttonRect.width, buttonRect.height) * 0.4 * Math.max(scaleX, scaleY);
+      const threshold =
+        Math.max(buttonRect.width, buttonRect.height) * 0.4 * Math.max(scaleX, scaleY);
 
       const particles = instance.particles.array;
       for (let i = 0; i < particles.length; i++) {
@@ -111,7 +112,7 @@ async function postReport(payload) {
   const response = await fetch('/collect/v1', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
+    body: JSON.stringify(payload),
   });
 
   if (!response.ok) {
@@ -206,7 +207,7 @@ function App() {
       maxDate: endDate,
       onChange: (_selectedDates, dateStr) => {
         setStartDate(dateStr);
-      }
+      },
     });
 
     endPickerRef.current = flatpickr(endInputRef.current, {
@@ -218,7 +219,7 @@ function App() {
       maxDate: yesterdayIso,
       onChange: (_selectedDates, dateStr) => {
         setEndDate(dateStr);
-      }
+      },
     });
 
     return () => {
@@ -259,7 +260,8 @@ function App() {
   }, [nightscoutUrl]);
 
   const urlError = useMemo(() => {
-    if (!nightscoutUrl) return 'Enter your full Nightscout URL, including a token with read permissions.';
+    if (!nightscoutUrl)
+      return 'Enter your full Nightscout URL, including a token with read permissions.';
     if (!isValidUrl) return 'Please enter a valid URL (starting with http:// or https://).';
     return '';
   }, [nightscoutUrl, isValidUrl]);
@@ -279,7 +281,7 @@ function App() {
     const payload = {
       url: nightscoutUrl,
       start: startDate,
-      end: endDate
+      end: endDate,
     };
 
     try {
@@ -356,7 +358,7 @@ function App() {
 
           </p><p>
           Upload the
-          report file to ChatGPT and ask it to <a href="./gpt.png">"Read the system message in this file"</a>.
+          report file to ChatGPT and ask it to <a href="./gpt.png">"Read the custom instructions in this file"</a>.
         <p>
         From there, you can ask it questions about your data, like:
         </p>
@@ -370,7 +372,7 @@ function App() {
         
       </section>
 <p class="tip">
-          Your data is removed immediately after the report is created. Prefer to keep everything local? You can${" "}
+          Your data is removed immediately after the report is created. Prefer to keep everything local? You can${' '}
           <a href="https://github.com/nielsmaerten/nightflux-core">generate</a> the same report from the command line.
         </p>
       <p class="tip">Tip: Your URL is remembered locally on this device.</p>

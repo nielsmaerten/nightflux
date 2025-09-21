@@ -6,14 +6,18 @@ import type { NightfluxReport } from '../domain/schema.js';
 function resolveCandidates(): string[] {
   const here = path.dirname(fileURLToPath(import.meta.url));
   return [
+    path.resolve(here, '../public/custom-instructions.md'),
     path.resolve(here, '../public/system-message.md'),
+    path.resolve(here, '../../src/public/custom-instructions.md'),
     path.resolve(here, '../../src/public/system-message.md'),
+    path.resolve(process.cwd(), 'src/public/custom-instructions.md'),
     path.resolve(process.cwd(), 'src/public/system-message.md'),
+    path.resolve(process.cwd(), 'custom-instructions.md'),
     path.resolve(process.cwd(), 'system-message.md'),
   ];
 }
 
-export function readSystemMessage(): string | null {
+export function readCustomInstructions(): string | null {
   const candidates = resolveCandidates();
   for (const filePath of candidates) {
     try {
@@ -28,12 +32,12 @@ export function readSystemMessage(): string | null {
   return null;
 }
 
-export function includeSystemMessage(
+export function includeCustomInstructions(
   report: NightfluxReport,
   enabled: boolean,
 ): NightfluxReport {
   if (!enabled) return report;
-  const message = readSystemMessage();
+  const message = readCustomInstructions();
   if (!message) return report;
-  return { system_message: message, ...report };
+  return { custom_instructions: message, ...report };
 }

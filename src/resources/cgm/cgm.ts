@@ -3,7 +3,7 @@ import { CgmArraySchema } from '../../domain/schema.js';
 import {
   validateTimeRange,
   validateWithSchema,
-  dedupByTimestamp,
+  dedupByUtcTime,
 } from '../../utils/common-utils.js';
 
 type NsEntry = {
@@ -12,7 +12,7 @@ type NsEntry = {
   type?: string;
 };
 
-export type CgmEntry = { t: number; mgDl: number };
+export type CgmEntry = { utc_time: number; mgDl: number };
 
 export default class CgmClient {
   constructor(private ns: Nightscout) {}
@@ -45,7 +45,7 @@ export default class CgmClient {
 
         const timestamp = Math.floor(entry.date / 1000);
         const mgDl = entry.sgv;
-        results.push({ t: timestamp, mgDl });
+        results.push({ utc_time: timestamp, mgDl });
         if (entry.date < oldest) oldest = entry.date;
       }
 
@@ -57,7 +57,7 @@ export default class CgmClient {
     }
 
     // De-duplicate by timestamp and sort
-    const sorted = dedupByTimestamp(results);
+    const sorted = dedupByUtcTime(results);
 
     return validateWithSchema(sorted, CgmArraySchema, 'CGM');
   }

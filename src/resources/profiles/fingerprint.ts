@@ -14,8 +14,14 @@ function round(n: number, dp = 4): number {
  */
 export function fingerprintBlocks(blocks: ProfileBlock[]): string {
   const canonical = (blocks || [])
-    .map((b) => ({ m: Math.max(0, Math.min(1440, Math.floor(b.m))), iu_h: round(b.iu_h) }))
-    .sort((a, b) => a.m - b.m);
+    .map((block) => ({
+      minutes_past_midnight: Math.max(
+        0,
+        Math.min(1440, Math.floor(block.minutes_past_midnight)),
+      ),
+      units_hourly: round(block.units_hourly),
+    }))
+    .sort((a, b) => a.minutes_past_midnight - b.minutes_past_midnight);
   const json = JSON.stringify(canonical);
   const hash = createHash('sha256').update(json).digest('hex');
   return `sha256:${hash}`;

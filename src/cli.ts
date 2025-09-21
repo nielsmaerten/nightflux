@@ -33,7 +33,7 @@ type RunOptions = {
   pretty?: boolean;
   format?: 'json' | 'yaml';
   quiet?: boolean;
-  systemMessage?: boolean;
+  customInstructions?: boolean;
 };
 
 async function run(urlArg: string | undefined, opts: RunOptions) {
@@ -56,12 +56,12 @@ async function run(urlArg: string | undefined, opts: RunOptions) {
   const outPath = resolveOutputPath({ format, start, end, requested: opts.output });
 
   const report = await collectExport(url, start, end);
-  const includeSystemMessage = opts.systemMessage !== false;
+  const includeCustomInstructions = opts.customInstructions !== false;
   writeReportFile(report, {
     outputFile: outPath,
     format,
     pretty: opts.pretty,
-    systemMessage: includeSystemMessage,
+    customInstructions: includeCustomInstructions,
   });
 }
 
@@ -69,7 +69,7 @@ type WriteReportParams = {
   outputFile: string;
   format: 'json' | 'yaml';
   pretty?: boolean;
-  systemMessage?: boolean;
+  customInstructions?: boolean;
 };
 
 function resolveOutputPath(options: {
@@ -98,9 +98,11 @@ program
   .option('-e, --end <YYYY-MM-DD>', 'End date')
   .option('-d, --days <n>', 'Number of days (overrides one side)')
   .option('-o, --output <file>', 'Output file (default ns-report-START-END.yaml)')
-  .addOption(new Option('-f, --format <type>', 'Output format').choices(['json', 'yaml']).default('yaml'))
+  .addOption(
+    new Option('-f, --format <type>', 'Output format').choices(['json', 'yaml']).default('yaml'),
+  )
   .option('-p, --pretty', 'Pretty-print JSON (2 spaces)')
-  .option('-x, --no-system-message', 'Omit system_message field in the export')
+  .option('-x, --no-custom-instructions', 'Omit custom_instructions field in the export')
   .option('-q, --quiet', 'Suppress logs')
   .showHelpAfterError()
   .action(async (urlArg: string | undefined, opts: any) => {

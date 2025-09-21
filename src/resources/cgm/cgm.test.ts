@@ -24,11 +24,11 @@ describe('Nightscout CGM (integration)', () => {
     // Bounds and order checks
     let prevT = -Infinity;
     for (const entry of entries) {
-      expect(entry.t).toBeGreaterThanOrEqual(start);
-      expect(entry.t).toBeLessThanOrEqual(end);
+      expect(entry.utc_time).toBeGreaterThanOrEqual(start);
+      expect(entry.utc_time).toBeLessThanOrEqual(end);
       expect(entry.mgDl).toBeGreaterThanOrEqual(0);
-      expect(entry.t).toBeGreaterThanOrEqual(prevT);
-      prevT = entry.t;
+      expect(entry.utc_time).toBeGreaterThanOrEqual(prevT);
+      prevT = entry.utc_time;
     }
   });
 });

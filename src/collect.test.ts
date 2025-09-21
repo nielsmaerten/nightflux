@@ -21,11 +21,11 @@ describe('Collect Export (integration)', () => {
     );
     for (const day of data.days) {
       const tz = day.date.timezone;
-      const dateStr = formatInTimeZone(new Date(day.date.t * 1000), tz, 'yyyy-MM-dd');
+      const dateStr = formatInTimeZone(new Date(day.date.utc_midnight * 1000), tz, 'yyyy-MM-dd');
       const cgmCount = day.cgm.length;
-      const carbsTotal = day.carbs.reduce((a, e) => a + (e.g || 0), 0);
-      const bolusTotal = day.bolus.reduce((a, e) => a + (e.iu || 0), 0);
-      const basalTotal = day.basal.reduce((a, e) => a + (e.iu_sum || 0), 0);
+      const carbsTotal = day.carbs.reduce((a, e) => a + (e.grams || 0), 0);
+      const bolusTotal = day.bolus.reduce((a, e) => a + (e.units || 0), 0);
+      const basalTotal = day.basal.reduce((a, e) => a + (e.units_total || 0), 0);
       const ttd = bolusTotal + basalTotal;
       console.log(
         `${dateStr} | cgm=${cgmCount} carbs=${carbsTotal.toFixed(0)}g bolus=${bolusTotal.toFixed(2)}U basal=${basalTotal.toFixed(2)}U profiles=${day.activeProfiles.length} TTD=${ttd.toFixed(2)}U`,

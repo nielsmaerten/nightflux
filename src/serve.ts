@@ -7,7 +7,7 @@ import logger from './utils/logger.js';
 import { resolveRange, resolveTimezone } from './utils/range.js';
 import { NightfluxReportSchema } from './domain/schema.js';
 import { stringify as yamlStringify } from 'yaml';
-import { includeSystemMessage } from './utils/system-message.js';
+import { includeCustomInstructions } from './utils/custom-instructions.js';
 
 const RequestSchema = z
   .object({
@@ -22,7 +22,7 @@ const RequestSchema = z
       .optional(),
     days: z.number().int().positive().optional(),
     yaml: z.boolean().optional(),
-    systemMessage: z.boolean().optional().default(true),
+    customInstructions: z.boolean().optional().default(true),
   })
   .strict();
 
@@ -48,10 +48,9 @@ export async function startServer(
   app.get('/', async (_request, reply) => reply.sendFile('index.html'));
 
   // Expose JSON Schema for the Nightflux report
-  app.get('/schema/v1', async (_request, reply) => {
-    const schema = z.toJSONSchema(NightfluxReportSchema);
-    return reply.code(200).send(schema);
-  });
+  const schemaJson = z.toJSONSchema(NightfluxReportSchema);
+  app.get('/schema/v1', async (_request, reply) => reply.code(200).send(schemaJson));
+  app.get('/schema/v2', async (_request, reply) => reply.code(200).send(schemaJson));
 
   // Versioned collect endpoint
   app.post('/collect/v1', async (request, reply) => {
@@ -59,12 +58,12 @@ export async function startServer(
     if (!parsed.success) {
       return reply.code(400).send({ error: 'Invalid request body', details: parsed.error.issues });
     }
-    const { url, start, end, days, yaml, systemMessage } = parsed.data;
+    const { url, start, end, days, yaml, customInstructions } = parsed.data;
     try {
       const tz = await resolveTimezone(url);
       const range = resolveRange(tz, start, end, days);
       const report = await collectExport(url, range.start, range.end);
-      const payload = includeSystemMessage(report, systemMessage);
+      const payload = includeCustomInstructions(report, customInstructions);
       if (yaml !== false) {
         const body = yamlStringify(payload) + '\n';
         reply.header('content-type', 'application/yaml; charset=utf-8');

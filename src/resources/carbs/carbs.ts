@@ -5,7 +5,7 @@ import {
   validateTimeRange,
   validateWithSchema,
   dedupByKey,
-  sortByTimestamp,
+  sortByUtcTime,
 } from '../../utils/common-utils.js';
 import {
   buildCursorParams,
@@ -26,7 +26,7 @@ type NsTreatment = {
   eventType?: string;
 };
 
-export type CarbEntry = { t: number; g: number };
+export type CarbEntry = { utc_time: number; grams: number };
 
 export default class CarbsClient {
   constructor(private ns: Nightscout) {}
@@ -57,8 +57,8 @@ export default class CarbsClient {
     }
 
     // De-duplicate and sort
-    const deduped = dedupByKey(aggregated, (entry) => `${entry.t}:${entry.g}`);
-    const sorted = sortByTimestamp(deduped);
+    const deduped = dedupByKey(aggregated, (entry) => `${entry.utc_time}:${entry.grams}`);
+    const sorted = sortByUtcTime(deduped);
 
     return validateWithSchema(sorted, CarbsArraySchema, 'carb');
   }
@@ -85,7 +85,9 @@ export default class CarbsClient {
           .filter((treatment) => typeof treatment.carbs === 'number' && treatment.carbs > 0)
           .map((treatment) => {
             const ms = resolveTreatmentTimestampMs(treatment);
-            return ms ? { t: Math.floor(ms / 1000), g: treatment.carbs! } : null;
+            return ms
+              ? { utc_time: Math.floor(ms / 1000), grams: treatment.carbs! }
+              : null;
           })
           .filter((entry): entry is CarbEntry => entry !== null),
       );
@@ -107,7 +109,7 @@ export default class CarbsClient {
         const ms = resolveTreatmentTimestampMs(treatment);
         if (typeof ms !== 'number') continue;
         if (ms < startMs || ms > endMs) continue;
-        out.push({ t: Math.floor(ms / 1000), g: treatment.carbs });
+        out.push({ utc_time: Math.floor(ms / 1000), grams: treatment.carbs });
         oldest = updateCursor(strategy, oldest, ms);
       }
 

@@ -37,7 +37,7 @@ describe('Real world validation', () => {
     ns = new Nightscout();
     const profiles = new ProfileClient(ns);
     const profile = await profiles.fetchLatestProfile();
-    tz = profile.tz;
+    tz = profile.timezone;
   });
 
   it('returns the expected bolus and carb totals', async () => {
@@ -58,7 +58,9 @@ describe('Real world validation', () => {
     const dailyCarbs = Object.keys(days).reduce(
       (acc, day) => {
         const { start, end } = toUtcRange(day, day, tz);
-        acc[day] = carbEntries.filter((entry) => entry.t >= start && entry.t < end);
+        acc[day] = carbEntries.filter(
+          (entry) => entry.utc_time >= start && entry.utc_time < end,
+        );
         return acc;
       },
       {} as Record<string, typeof carbEntries>,
@@ -67,7 +69,9 @@ describe('Real world validation', () => {
     const dailyBolus = Object.keys(days).reduce(
       (acc, day) => {
         const { start, end } = toUtcRange(day, day, tz);
-        acc[day] = bolusEntries.filter((entry) => entry.t >= start && entry.t < end);
+        acc[day] = bolusEntries.filter(
+          (entry) => entry.utc_time >= start && entry.utc_time < end,
+        );
         return acc;
       },
       {} as Record<string, typeof bolusEntries>,
@@ -78,8 +82,8 @@ describe('Real world validation', () => {
       const expectedCarbs = days[day].carbs;
       const expectedBolus = days[day].bolus;
 
-      const actualCarbs = dailyCarbs[day].reduce((sum, entry) => sum + (entry.g || 0), 0);
-      const actualBolus = dailyBolus[day].reduce((sum, entry) => sum + (entry.iu || 0), 0);
+      const actualCarbs = dailyCarbs[day].reduce((sum, entry) => sum + (entry.grams || 0), 0);
+      const actualBolus = dailyBolus[day].reduce((sum, entry) => sum + (entry.units || 0), 0);
 
       // Allow small rounding errors for bolus and carbs
       expect(actualCarbs).toBe(expectedCarbs);

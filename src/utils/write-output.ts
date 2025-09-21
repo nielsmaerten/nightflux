@@ -3,19 +3,19 @@ import fs from 'fs';
 import { NightfluxReport } from 'src/domain/schema';
 import logger from './logger';
 import { stringify as yamlStringify } from 'yaml';
-import { includeSystemMessage } from './system-message';
+import { includeCustomInstructions } from './custom-instructions';
 
 type WriteOutputOptions = {
   outputFile: string;
   format: 'json' | 'yaml';
   pretty?: boolean;
-  systemMessage?: boolean;
+  customInstructions?: boolean;
 };
 
 export function writeOutput(report: NightfluxReport, options: WriteOutputOptions): void {
-  const { outputFile, format, pretty, systemMessage } = options;
+  const { outputFile, format, pretty, customInstructions } = options;
 
-  const payload = includeSystemMessage(report, systemMessage !== false);
+  const payload = includeCustomInstructions(report, customInstructions !== false);
   let content: string;
   if (format === 'yaml') {
     content = yamlStringify(payload);

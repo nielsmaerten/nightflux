@@ -1,32 +1,30 @@
 <!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Nightflux</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.dark.min.css" />
+    <link rel="stylesheet" href="https://npmcdn.com/flatpickr/dist/themes/dark.css" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
 
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Nightflux</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.dark.min.css" />
-  <link rel="stylesheet" href="https://npmcdn.com/flatpickr/dist/themes/dark.css">
-  <link rel="stylesheet" href="./styles.css" />
-</head>
+  <body>
+    <div id="particles-js"></div>
+    <main class="app-shell">
+      <div class="panel">
+        <h1 class="page-title">Nightflux</h1>
+        <p class="intro">Analyze your Nightscout data with the help of AI.</p>
+        <hr />
+        <div id="app" aria-live="polite"></div>
+      </div>
+    </main>
 
-<body>
-  <div id="particles-js"></div>
-  <main class="app-shell">
-    <div class="panel">
-      <h1 class="page-title">Nightflux</h1>
-      <p class="intro">Analyze your Nightscout data with the help of AI.</p>
-      <hr />
-      <div id="app" aria-live="polite"></div>
-    </div>
-  </main>
-
-  <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/preact@10.19.3/dist/preact.umd.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/preact@10.19.3/hooks/dist/hooks.umd.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/htm@3.1.1/dist/htm.umd.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-  <script src="./app.js"></script>
-</body>
-
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/preact@10.19.3/dist/preact.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/preact@10.19.3/hooks/dist/hooks.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/htm@3.1.1/dist/htm.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="./app.js"></script>
+  </body>
 </html>

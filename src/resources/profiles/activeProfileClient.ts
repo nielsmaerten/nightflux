@@ -10,7 +10,7 @@ import { validateEachWithSchema } from '../../utils/common-utils.js';
 import { NsTreatment } from '../../domain/ns-types.js';
 import { DEFAULT_STRATEGIES, type QueryStrategy } from '../../utils/pagination-utils.js';
 
-export type ActiveProfile = { id: string; pct: number; start: number };
+export type ActiveProfile = { id: string; pct: number; utc_activation_time: number };
 
 /**
  * Client for reading active profile switches from Nightscout.
@@ -44,12 +44,20 @@ export default class ActiveProfileClient extends NightscoutClientBase {
     const switches = await this.fetchSwitchesBetween(startMs, endMs);
 
     const timeline: ActiveProfile[] = [];
-    timeline.push({ id: seed?.id || 'unknown', pct: seed?.pct ?? 100, start: startSec });
+    timeline.push({
+      id: seed?.id || 'unknown',
+      pct: seed?.pct ?? 100,
+      utc_activation_time: startSec,
+    });
     for (const profileEvent of switches) {
-      if (profileEvent.t < startSec) continue;
+      if (profileEvent.utc_activation_time < startSec) continue;
       const last = timeline[timeline.length - 1];
       if (!last || last.id !== profileEvent.id || last.pct !== profileEvent.pct) {
-        timeline.push({ id: profileEvent.id, pct: profileEvent.pct, start: profileEvent.t });
+        timeline.push({
+          id: profileEvent.id,
+          pct: profileEvent.pct,
+          utc_activation_time: profileEvent.utc_activation_time,
+        });
       }
     }
 
@@ -67,7 +75,7 @@ export default class ActiveProfileClient extends NightscoutClientBase {
   private async fetchSwitchesBetween(
     startMs: number,
     endMs: number,
-  ): Promise<Array<{ t: number; id: string; pct: number }>> {
+  ): Promise<Array<{ utc_activation_time: number; id: string; pct: number }>> {
     for (const strategyName of DEFAULT_STRATEGIES) {
       const found = await this.fetchBetweenStrategy(strategyName, startMs, endMs);
       if (found.length > 0) return found;
@@ -84,8 +92,8 @@ export default class ActiveProfileClient extends NightscoutClientBase {
     strategy: QueryStrategy,
     startMs: number,
     endMs: number,
-  ): Promise<Array<{ t: number; id: string; pct: number }>> {
-    const output: Array<{ t: number; id: string; pct: number }> = [];
+  ): Promise<Array<{ utc_activation_time: number; id: string; pct: number }>> {
+    const output: Array<{ utc_activation_time: number; id: string; pct: number }> = [];
     const pageSize = 1000;
     const maxPages = 100;
     const isProfileSwitch = (t: NsTreatment) =>
@@ -106,14 +114,18 @@ export default class ActiveProfileClient extends NightscoutClientBase {
           if (tsMs >= startMs && tsMs <= endMs) {
             const profileId = resolveProfileIdFromTreatment(treatment) || 'unknown';
             const percent = resolveProfilePercent(treatment);
-            output.push({ t: Math.floor(tsMs / 1000), id: profileId, pct: percent });
+            output.push({
+              utc_activation_time: Math.floor(tsMs / 1000),
+              id: profileId,
+              pct: percent,
+            });
           }
         }
         if (page.length < pageSize) break;
         skip += pageSize;
         if (reachedOlder) break;
       }
-      output.sort((a, b) => a.t - b.t);
+      output.sort((a, b) => a.utc_activation_time - b.utc_activation_time);
       return dedupConsecutiveStates(output);
     }
 
@@ -145,7 +157,11 @@ export default class ActiveProfileClient extends NightscoutClientBase {
         if (tsMs < startMs || tsMs > endMs) continue;
         const profileId = resolveProfileIdFromTreatment(treatment) || 'unknown';
         const percent = resolveProfilePercent(treatment);
-        output.push({ t: Math.floor(tsMs / 1000), id: profileId, pct: percent });
+        output.push({
+          utc_activation_time: Math.floor(tsMs / 1000),
+          id: profileId,
+          pct: percent,
+        });
 
         if (strategy === 'created_at') {
           const createdAt =
@@ -171,7 +187,7 @@ export default class ActiveProfileClient extends NightscoutClientBase {
       if (page.length < pageSize) break;
     }
 
-    output.sort((a, b) => a.t - b.t);
+    output.sort((a, b) => a.utc_activation_time - b.utc_activation_time);
     return dedupConsecutiveStates(output);
   }
 

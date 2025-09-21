@@ -8,6 +8,7 @@ import BasalClient from './resources/basal/basal.js';
 import { toUtcRange } from './utils/timezones.js';
 import { NightfluxReportSchema, type NightfluxReport } from './domain/schema.js';
 import { parse, isValid, addDays, format } from 'date-fns';
+import { formatInTimeZone } from 'date-fns-tz';
 import logger from './utils/logger.js';
 
 /**
@@ -52,7 +53,7 @@ export async function collectExport(
 
   // Determine timezone from latest profile
   const latestProfile = await profileClient.fetchLatestProfile();
-  const tz = latestProfile.tz;
+  const tz = latestProfile.timezone;
 
   // Global UTC range for [start..end] inclusive in the resolved timezone
   const { start: rangeStart, end: rangeEnd } = toUtcRange(start, end, tz);
@@ -126,10 +127,10 @@ export async function collectExport(
     // Find the most recent state <= dayStart
     let current = activeTimeline[0];
     for (const it of activeTimeline) {
-      if (it.start <= dayStart) current = it;
+      if (it.utc_activation_time <= dayStart) current = it;
       else break;
     }
-    const entries: { id: string; pct: number; start: number }[] = [];
+    const entries: { id: string; pct: number; utc_activation_time: number }[] = [];
     const mapToStableId = (name: string, atSec: number): string => {
       const key = normalizeName(name || '');
       const arr = startsByName.get(key) || [];
@@ -145,17 +146,25 @@ export async function collectExport(
     };
 
     if (current)
-      entries.push({ id: mapToStableId(current.id, dayStart), pct: current.pct, start: dayStart });
+      entries.push({
+        id: mapToStableId(current.id, dayStart),
+        pct: current.pct,
+        utc_activation_time: dayStart,
+      });
     for (const it of activeTimeline) {
-      if (it.start >= dayEnd) break;
-      if (it.start >= dayStart && it.start < dayEnd)
-        entries.push({ id: mapToStableId(it.id, it.start), pct: it.pct, start: it.start });
+      if (it.utc_activation_time >= dayEnd) break;
+      if (it.utc_activation_time >= dayStart && it.utc_activation_time < dayEnd)
+        entries.push({
+          id: mapToStableId(it.id, it.utc_activation_time),
+          pct: it.pct,
+          utc_activation_time: it.utc_activation_time,
+        });
     }
     if (entries.length === 0)
       entries.push({
         id: mapToStableId(current?.id || 'unknown', dayStart),
         pct: current?.pct ?? 100,
-        start: dayStart,
+        utc_activation_time: dayStart,
       });
     return entries;
   }
@@ -167,25 +176,35 @@ export async function collectExport(
     const { start: dayStart, end: dayEnd } = toUtcRange(dayStr, dayStr, tz);
 
     // Bucket signal and treatment entries
-    const cgm = cgmAll.filter((e) => e.t >= dayStart && e.t < dayEnd);
-    const carbs = carbsAll.filter((e) => e.t >= dayStart && e.t < dayEnd);
-    const bolus = bolusAll.filter((e) => e.t >= dayStart && e.t < dayEnd);
+    const cgm = cgmAll.filter((entry) => entry.utc_time >= dayStart && entry.utc_time < dayEnd);
+    const carbs = carbsAll.filter(
+      (entry) => entry.utc_time >= dayStart && entry.utc_time < dayEnd,
+    );
+    const bolus = bolusAll.filter(
+      (entry) => entry.utc_time >= dayStart && entry.utc_time < dayEnd,
+    );
 
     // Basal segments for the day
     const basalDay = await basalClient.computeBasalDay(dayStr, tz);
-    const basal = basalDay.data.segments.map((s) => ({
-      t: Math.floor(s.start / 1000),
-      iu_sum: s.total_U,
-      iu_h: s.rate_U_per_h,
-      d: Math.floor((s.end - s.start) / 1000),
-      type: s.notes,
+    const basal = basalDay.data.segments.map((segment) => ({
+      utc_time: Math.floor(segment.start / 1000),
+      units_total: segment.total_U,
+      units_hourly: segment.rate_U_per_h,
+      duration: Math.floor((segment.end - segment.start) / 1000),
+      type: segment.notes,
     }));
 
     // Active profile timeline within the day
     const activeProfiles = sliceActiveProfiles(dayStart, dayEnd);
 
+    const localMidnight = formatInTimeZone(
+      new Date(dayStart * 1000),
+      tz,
+      "yyyy-MM-dd'T'HH:mm:ssXXX",
+    );
+
     days.push({
-      date: { timezone: tz, t: dayStart },
+      date: { timezone: tz, utc_midnight: dayStart, local_midnight: localMidnight },
       activeProfiles,
       cgm,
       carbs,
@@ -197,10 +216,12 @@ export async function collectExport(
   logger.endProgress();
 
   const exportObj: NightfluxReport = {
-    $schema: 'https://nightflux-reporter.onrender.com/schema/v1',
+    $schema: 'https://nightflux-reporter.onrender.com/schema/v2',
     meta: {
-      schema_version: 1,
-      generated_at: Math.floor(Date.now() / 1000),
+      schema_version: 2,
+      utc_generated_time: Math.floor(Date.now() / 1000),
+      local_start: start,
+      local_end: end,
     },
     profiles,
     days,

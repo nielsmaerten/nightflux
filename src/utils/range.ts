@@ -17,7 +17,7 @@ export async function resolveTimezone(url: string): Promise<string> {
   const ns = new Nightscout(url);
   const profileClient = new ProfileClient(ns);
   const latest = await profileClient.fetchLatestProfile();
-  return latest.tz || 'UTC';
+  return latest.timezone || 'UTC';
 }
 
 export function resolveRange(

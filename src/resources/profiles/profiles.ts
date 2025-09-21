@@ -19,8 +19,8 @@ type NsProfileDoc = {
   store: Record<string, NsProfileParams>;
 };
 
-export type ProfileBlock = { m: number; iu_h: number };
-export type Profile = { id: string; name: string; tz: string; blocks: ProfileBlock[] };
+export type ProfileBlock = { minutes_past_midnight: number; units_hourly: number };
+export type Profile = { id: string; name: string; timezone: string; blocks: ProfileBlock[] };
 
 export default class ProfileClient {
   constructor(private ns: Nightscout) {}
@@ -49,8 +49,11 @@ export default class ProfileClient {
           .slice()
           .sort((entryA, entryB) => entryA.timeAsSeconds - entryB.timeAsSeconds)
           .map((basalEntry) => ({
-            m: Math.max(0, Math.min(1440, Math.floor(basalEntry.timeAsSeconds / 60))),
-            iu_h: basalEntry.value,
+            minutes_past_midnight: Math.max(
+              0,
+              Math.min(1440, Math.floor(basalEntry.timeAsSeconds / 60)),
+            ),
+            units_hourly: basalEntry.value,
           }));
 
         // Ignore empty block sets to satisfy schema min(1)
@@ -59,7 +62,7 @@ export default class ProfileClient {
         // Use Nightscout provided profile timezone if present, otherwise default to 'UTC'
         const tz = (params as NsProfileParams).timezone || 'UTC';
 
-        profiles.push({ id: `${doc._id}:${name}`, name, tz, blocks });
+        profiles.push({ id: `${doc._id}:${name}`, name, timezone: tz, blocks });
       }
     }
 

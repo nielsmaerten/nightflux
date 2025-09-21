@@ -58,17 +58,6 @@ export function validateEachWithSchema<T>(
 }
 
 /**
- * Generic deduplication by timestamp for entries with a 't' field.
- */
-export function dedupByTimestamp<T extends { t: number }>(entries: T[]): T[] {
-  const dedup = new Map<number, T>();
-  for (const entry of entries) {
-    dedup.set(entry.t, entry);
-  }
-  return Array.from(dedup.values()).sort((a, b) => a.t - b.t);
-}
-
-/**
  * Generic deduplication by custom key function.
  */
 export function dedupByKey<T>(entries: T[], keyFn: (entry: T) => string | number): T[] {
@@ -80,8 +69,19 @@ export function dedupByKey<T>(entries: T[], keyFn: (entry: T) => string | number
 }
 
 /**
- * Sort entries by timestamp (entries with 't' field).
+ * Generic deduplication by timestamp for entries with a 'utc_time' field.
  */
-export function sortByTimestamp<T extends { t: number }>(entries: T[]): T[] {
-  return entries.sort((a, b) => a.t - b.t);
+export function dedupByUtcTime<T extends { utc_time: number }>(entries: T[]): T[] {
+  const dedup = new Map<number, T>();
+  for (const entry of entries) {
+    dedup.set(entry.utc_time, entry);
+  }
+  return Array.from(dedup.values()).sort((a, b) => a.utc_time - b.utc_time);
+}
+
+/**
+ * Sort entries by timestamp (entries with 'utc_time' field).
+ */
+export function sortByUtcTime<T extends { utc_time: number }>(entries: T[]): T[] {
+  return entries.sort((a, b) => a.utc_time - b.utc_time);
 }
