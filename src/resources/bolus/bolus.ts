@@ -7,6 +7,8 @@ import {
   dedupByKey,
   sortByUtcTime,
 } from '../../utils/common-utils.js';
+import { formatInTimeZone } from 'date-fns-tz';
+import { assertValidTimezone } from '../../utils/timezones.js';
 import {
   buildCursorParams,
   initializeCursor,
@@ -28,7 +30,7 @@ type NsTreatment = {
   isValid?: boolean;
 };
 
-export type BolusEntry = { utc_time: number; units: number };
+export type BolusEntry = { utc_time: number; local_time: string; units: number };
 
 function totalInsulin(treatment: NsTreatment): number {
   if (treatment.isValid === false) return 0;
@@ -52,15 +54,16 @@ export default class BolusClient {
   /**
    * Fetch bolus events between [start, end] epoch seconds (inclusive).
    */
-  async getBetween(start: number, end: number): Promise<BolusEntry[]> {
+  async getBetween(start: number, end: number, tz: string): Promise<BolusEntry[]> {
     validateTimeRange(start, end);
+    assertValidTimezone(tz);
 
     const startMs = Math.floor(start * 1000);
     const endMs = Math.floor(end * 1000);
 
     let aggregated: BolusEntry[] = [];
     for (const strategy of DEFAULT_STRATEGIES) {
-      aggregated = await this.#fetchStrategy(strategy, startMs, endMs);
+      aggregated = await this.#fetchStrategy(strategy, startMs, endMs, tz);
       if (aggregated.length > 0) break;
     }
 
@@ -78,6 +81,7 @@ export default class BolusClient {
     strategy: QueryStrategy,
     startMs: number,
     endMs: number,
+    tz: string,
   ): Promise<BolusEntry[]> {
     const count = 1000;
     const maxPages = 100;
@@ -97,7 +101,15 @@ export default class BolusClient {
             const iu = totalInsulin(treatment);
             const ms = resolveTreatmentTimestampMs(treatment);
             return iu > 0 && ms
-              ? { utc_time: Math.floor(ms / 1000), units: iu }
+              ? {
+                  utc_time: Math.floor(ms / 1000),
+                  local_time: formatInTimeZone(
+                    new Date(ms),
+                    tz,
+                    "yyyy-MM-dd'T'HH:mm:ssXXX",
+                  ),
+                  units: iu,
+                }
               : null;
           })
           .filter((entry): entry is BolusEntry => entry !== null),
@@ -127,7 +139,11 @@ export default class BolusClient {
         if (ms < startMs || ms > endMs) continue;
         const iu = totalInsulin(treatment);
         if (iu <= 0) continue;
-        out.push({ utc_time: Math.floor(ms / 1000), units: iu });
+        out.push({
+          utc_time: Math.floor(ms / 1000),
+          local_time: formatInTimeZone(new Date(ms), tz, "yyyy-MM-dd'T'HH:mm:ssXXX"),
+          units: iu,
+        });
         oldest = updateCursor(strategy, oldest, ms);
       }
 

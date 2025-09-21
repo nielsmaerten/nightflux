@@ -3,16 +3,21 @@ import { describe, expect, it } from 'vitest';
 import Nightscout from '../../clients/nightscout.js';
 import BolusClient from './bolus';
 import { BolusArraySchema } from '../../domain/schema';
+import ProfileClient from '../profiles/profiles.js';
+import { formatInTimeZone } from 'date-fns-tz';
 
 describe('Nightscout Bolus (integration)', () => {
   it('fetches bolus entries for the last 30 days', async () => {
     const ns = new Nightscout();
     const bolusClient = new BolusClient(ns);
+    const profileClient = new ProfileClient(ns);
+    const latestProfile = await profileClient.fetchLatestProfile();
+    const tz = latestProfile.timezone;
     const nowSec = Math.floor(Date.now() / 1000);
     const start = nowSec - 30 * 24 * 3600;
     const end = nowSec + 60; // small cushion
 
-    const entries = await bolusClient.getBetween(start, end);
+    const entries = await bolusClient.getBetween(start, end, tz);
 
     const parsed = BolusArraySchema.safeParse(entries);
     expect(parsed.success).toBe(true);
@@ -27,6 +32,9 @@ describe('Nightscout Bolus (integration)', () => {
       expect(entry.utc_time).toBeLessThanOrEqual(end);
       expect(entry.units).toBeGreaterThan(0);
       expect(entry.utc_time).toBeGreaterThanOrEqual(prevT);
+      expect(entry.local_time).toBe(
+        formatInTimeZone(new Date(entry.utc_time * 1000), tz, "yyyy-MM-dd'T'HH:mm:ssXXX"),
+      );
       prevT = entry.utc_time;
     }
   });

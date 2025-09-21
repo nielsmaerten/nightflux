@@ -4,14 +4,14 @@ import { formatInTimeZone } from 'date-fns-tz';
 import collectExport from './collect.js';
 
 describe('Collect Export (integration)', () => {
-  it('produces an export for 2025-08-10..2025-09-10', async () => {
+  it('produces an export for 2025-09-05..2025-09-10', async () => {
     const url = process.env.NIGHTSCOUT_URL;
     if (!url) {
       console.warn('NIGHTSCOUT_URL not set; skipping collect export integration test.');
       return;
     }
 
-    const start = '2025-08-10';
+    const start = '2025-09-05';
     const end = '2025-09-10';
     const data = await collectExport(url, start, end);
 

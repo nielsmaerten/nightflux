@@ -83,7 +83,7 @@ The function returns an object compliant with the `NightfluxReportSchema` define
   - `date`: day metadata
     - `timezone`: IANA timezone resolved from the latest active profile
     - `utc_midnight`: epoch seconds at local midnight of the day (start boundary)
-    - `local_midnight`: ISO string for the same instant rendered in the profile timezone
+    - `local_start`: ISO string for the same instant rendered in the profile timezone
   - `activeProfiles`: profile timeline within that local day
     - `id`: stable profile id (`${docId}:${name}`) mapped based on the profile document active at the event time
     - `pct`: active profile percentage (e.g., 100 for default)

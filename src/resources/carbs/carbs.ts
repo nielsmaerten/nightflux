@@ -7,6 +7,8 @@ import {
   dedupByKey,
   sortByUtcTime,
 } from '../../utils/common-utils.js';
+import { formatInTimeZone } from 'date-fns-tz';
+import { assertValidTimezone } from '../../utils/timezones.js';
 import {
   buildCursorParams,
   initializeCursor,
@@ -26,7 +28,7 @@ type NsTreatment = {
   eventType?: string;
 };
 
-export type CarbEntry = { utc_time: number; grams: number };
+export type CarbEntry = { utc_time: number; local_time: string; grams: number };
 
 export default class CarbsClient {
   constructor(private ns: Nightscout) {}
@@ -43,8 +45,9 @@ export default class CarbsClient {
   /**
    * Fetch carbohydrate intake events between [start, end] epoch seconds (inclusive).
    */
-  async getBetween(start: number, end: number): Promise<CarbEntry[]> {
+  async getBetween(start: number, end: number, tz: string): Promise<CarbEntry[]> {
     validateTimeRange(start, end);
+    assertValidTimezone(tz);
 
     const startMs = Math.floor(start * 1000);
     const endMs = Math.floor(end * 1000);
@@ -52,7 +55,7 @@ export default class CarbsClient {
     // Run multiple strategies to accommodate varying field availability
     let aggregated: CarbEntry[] = [];
     for (const strategy of DEFAULT_STRATEGIES) {
-      aggregated = await this.#fetchStrategy(strategy, startMs, endMs);
+      aggregated = await this.#fetchStrategy(strategy, startMs, endMs, tz);
       if (aggregated.length > 0) break;
     }
 
@@ -67,6 +70,7 @@ export default class CarbsClient {
     strategy: QueryStrategy,
     startMs: number,
     endMs: number,
+    tz: string,
   ): Promise<CarbEntry[]> {
     const count = 1000;
     const maxPages = 100;
@@ -86,7 +90,15 @@ export default class CarbsClient {
           .map((treatment) => {
             const ms = resolveTreatmentTimestampMs(treatment);
             return ms
-              ? { utc_time: Math.floor(ms / 1000), grams: treatment.carbs! }
+              ? {
+                  utc_time: Math.floor(ms / 1000),
+                  local_time: formatInTimeZone(
+                    new Date(ms),
+                    tz,
+                    "yyyy-MM-dd'T'HH:mm:ssXXX",
+                  ),
+                  grams: treatment.carbs!,
+                }
               : null;
           })
           .filter((entry): entry is CarbEntry => entry !== null),
@@ -109,7 +121,11 @@ export default class CarbsClient {
         const ms = resolveTreatmentTimestampMs(treatment);
         if (typeof ms !== 'number') continue;
         if (ms < startMs || ms > endMs) continue;
-        out.push({ utc_time: Math.floor(ms / 1000), grams: treatment.carbs });
+        out.push({
+          utc_time: Math.floor(ms / 1000),
+          local_time: formatInTimeZone(new Date(ms), tz, "yyyy-MM-dd'T'HH:mm:ssXXX"),
+          grams: treatment.carbs,
+        });
         oldest = updateCursor(strategy, oldest, ms);
       }
 

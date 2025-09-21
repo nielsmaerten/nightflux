@@ -20,20 +20,22 @@ export interface NightfluxReport {
   }[];
   notes?: {
     utc_time: number;
+    local_time: string; // YYYY-MM-DDTHH:mm:ss in local timezone
     type: 'cgm' | 'pump' | 'user';
     text: string;
   }[];
   days: {
-    date: { timezone: string; utc_midnight: number; local_midnight: string };
+    date: { timezone: string; utc_midnight: number; local_start: string; utc_end: number; local_end: string };
     activeProfiles: { id: string; pct: number; utc_activation_time: number }[];
-    cgm: { utc_time: number; mgDl: number }[];
-    carbs: { utc_time: number; grams: number }[];
-    bolus: { utc_time: number; units: number }[];
+    cgm: { utc_time: number; local_time: string; mgDl: number }[];
+    carbs: { utc_time: number; local_time: string; grams: number }[];
+    bolus: { utc_time: number; local_time: string; units: number }[];
     basal: {
       utc_time: number;
+      local_time: string;
       units_total: number;
       units_hourly: number;
-      duration: number;
+      duration_seconds: number;
       type: string;
     }[];
   }[];
@@ -71,6 +73,7 @@ export const ProfilesSchema = z.array(ProfileSchema).min(1);
 export const NoteSchema = z
   .object({
     utc_time: z.number().int(),
+    local_time: z.string(),
     type: z.enum(['cgm', 'pump', 'user']),
     text: z.string(),
   })
@@ -80,7 +83,9 @@ export const DayDateSchema = z
   .object({
     timezone: z.string(),
     utc_midnight: z.number().int(),
-    local_midnight: z.string(),
+    local_start: z.string(),
+    utc_end: z.number().int(),
+    local_end: z.string(),
   })
   .strict();
 
@@ -95,6 +100,7 @@ export const ActiveProfileSchema = z
 export const CgmEntrySchema = z
   .object({
     utc_time: z.number().int(),
+    local_time: z.string(),
     mgDl: z.number().min(0),
   })
   .strict();
@@ -102,6 +108,7 @@ export const CgmEntrySchema = z
 export const CarbEntrySchema = z
   .object({
     utc_time: z.number().int(),
+    local_time: z.string(),
     grams: z.number().min(0),
   })
   .strict();
@@ -109,6 +116,7 @@ export const CarbEntrySchema = z
 export const BolusEntrySchema = z
   .object({
     utc_time: z.number().int(),
+    local_time: z.string(),
     units: z.number().min(0),
   })
   .strict();
@@ -116,9 +124,10 @@ export const BolusEntrySchema = z
 export const BasalSegmentSchema = z
   .object({
     utc_time: z.number().int(),
+    local_time: z.string(),
     units_total: z.number().min(0),
     units_hourly: z.number().min(0),
-    duration: z.number().int().min(0), // duration in seconds
+    duration_seconds: z.number().int().min(0), // duration in seconds
     type: z.string(),
   })
   .strict();

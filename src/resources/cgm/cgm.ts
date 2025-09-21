@@ -5,6 +5,8 @@ import {
   validateWithSchema,
   dedupByUtcTime,
 } from '../../utils/common-utils.js';
+import { formatInTimeZone } from 'date-fns-tz';
+import { assertValidTimezone } from '../../utils/timezones.js';
 
 type NsEntry = {
   date: number; // ms since epoch
@@ -12,7 +14,7 @@ type NsEntry = {
   type?: string;
 };
 
-export type CgmEntry = { utc_time: number; mgDl: number };
+export type CgmEntry = { utc_time: number; local_time: string; mgDl: number };
 
 export default class CgmClient {
   constructor(private ns: Nightscout) {}
@@ -21,8 +23,9 @@ export default class CgmClient {
    * Fetch CGM entries between start and end (epoch seconds, inclusive),
    * paginate if needed, transform and validate against CgmArraySchema.
    */
-  async getBetween(start: number, end: number): Promise<CgmEntry[]> {
+  async getBetween(start: number, end: number, tz: string): Promise<CgmEntry[]> {
     validateTimeRange(start, end);
+    assertValidTimezone(tz);
 
     const startMs = Math.floor(start * 1000);
     const endMs = Math.floor(end * 1000);
@@ -45,7 +48,12 @@ export default class CgmClient {
 
         const timestamp = Math.floor(entry.date / 1000);
         const mgDl = entry.sgv;
-        results.push({ utc_time: timestamp, mgDl });
+        const local_time = formatInTimeZone(
+          new Date(entry.date),
+          tz,
+          "yyyy-MM-dd'T'HH:mm:ssXXX",
+        );
+        results.push({ utc_time: timestamp, local_time, mgDl });
         if (entry.date < oldest) oldest = entry.date;
       }
 

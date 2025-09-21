@@ -105,15 +105,15 @@ export async function collectExport(
 
   // Fetch CGM, carbs, bolus and bucket by day later
   logger.infoInlineStart('Fetching cgm entries...');
-  const cgmAll = await cgmClient.getBetween(rangeStart, rangeEnd);
+  const cgmAll = await cgmClient.getBetween(rangeStart, rangeEnd, tz);
   logger.infoInlineDone(`Done: ${cgmAll.length} entries`);
 
   logger.infoInlineStart('Fetching carb entries...');
-  const carbsAll = await carbsClient.getBetween(rangeStart, rangeEnd);
+  const carbsAll = await carbsClient.getBetween(rangeStart, rangeEnd, tz);
   logger.infoInlineDone(`Done: ${carbsAll.length} entries`);
 
   logger.infoInlineStart('Fetching bolus entries...');
-  const bolusAll = await bolusClient.getBetween(rangeStart, rangeEnd);
+  const bolusAll = await bolusClient.getBetween(rangeStart, rangeEnd, tz);
   logger.infoInlineDone(`Done: ${bolusAll.length} entries`);
 
   // Build list of day strings (inclusive)
@@ -186,25 +186,41 @@ export async function collectExport(
 
     // Basal segments for the day
     const basalDay = await basalClient.computeBasalDay(dayStr, tz);
-    const basal = basalDay.data.segments.map((segment) => ({
-      utc_time: Math.floor(segment.start / 1000),
-      units_total: segment.total_U,
-      units_hourly: segment.rate_U_per_h,
-      duration: Math.floor((segment.end - segment.start) / 1000),
-      type: segment.notes,
-    }));
+    const basal = basalDay.data.segments.map((segment) => {
+      const utcTime = Math.floor(segment.start / 1000);
+      return {
+        utc_time: utcTime,
+        local_time: formatInTimeZone(new Date(segment.start), tz, "yyyy-MM-dd'T'HH:mm:ssXXX"),
+        units_total: segment.total_U,
+        units_hourly: segment.rate_U_per_h,
+        duration_seconds: Math.floor((segment.end - segment.start) / 1000),
+        type: segment.notes,
+      };
+    });
 
     // Active profile timeline within the day
     const activeProfiles = sliceActiveProfiles(dayStart, dayEnd);
 
-    const localMidnight = formatInTimeZone(
+    const localDayStart = formatInTimeZone(
       new Date(dayStart * 1000),
       tz,
       "yyyy-MM-dd'T'HH:mm:ssXXX",
     );
 
+    const localDayEnd = formatInTimeZone(
+      new Date(dayEnd * 1000),
+      tz,
+      "yyyy-MM-dd'T'HH:mm:ssXXX",
+    );
+
     days.push({
-      date: { timezone: tz, utc_midnight: dayStart, local_midnight: localMidnight },
+      date: {
+        timezone: tz,
+        utc_midnight: dayStart,
+        local_start: localDayStart,
+        utc_end: dayEnd,
+        local_end: localDayEnd,
+      },
       activeProfiles,
       cgm,
       carbs,
@@ -220,8 +236,8 @@ export async function collectExport(
     meta: {
       schema_version: 2,
       utc_generated_time: Math.floor(Date.now() / 1000),
-      local_start: start,
-      local_end: end,
+      local_start: formatInTimeZone(new Date(rangeStart * 1000), tz, "yyyy-MM-dd'T'HH:mm:ssXXX"),
+      local_end: formatInTimeZone(new Date(rangeEnd * 1000), tz, "yyyy-MM-dd'T'HH:mm:ssXXX"),
     },
     profiles,
     days,

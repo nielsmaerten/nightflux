@@ -47,8 +47,8 @@ describe('Real world validation', () => {
     const firstDay = Object.keys(days)[0];
     const lastDay = Object.keys(days)[Object.keys(days).length - 1];
     const { start, end } = toUtcRange(firstDay, lastDay, tz);
-    const carbEntries = await carbs.getBetween(start, end);
-    const bolusEntries = await bolus.getBetween(start, end);
+    const carbEntries = await carbs.getBetween(start, end, tz);
+    const bolusEntries = await bolus.getBetween(start, end, tz);
 
     // Integration sanity
     expect(carbEntries.length).toBeGreaterThan(0);

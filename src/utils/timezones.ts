@@ -1,6 +1,15 @@
 import { addDays, isValid, parse } from 'date-fns';
 import { fromZonedTime } from 'date-fns-tz';
 
+export function assertValidTimezone(tz: string): void {
+  try {
+    // eslint-disable-next-line no-new
+    new Intl.DateTimeFormat('en-US', { timeZone: tz });
+  } catch {
+    throw new Error(`Invalid IANA timezone: '${tz}'.`);
+  }
+}
+
 /**
  * Convert a local date range in a specific IANA timezone into UTC epoch seconds.
  *
@@ -26,12 +35,7 @@ export function toUtcRange(
   }
 
   // Validate timezone via Intl
-  try {
-    // eslint-disable-next-line no-new
-    new Intl.DateTimeFormat('en-US', { timeZone: tz });
-  } catch {
-    throw new Error(`Invalid IANA timezone: '${tz}'.`);
-  }
+  assertValidTimezone(tz);
 
   // Parse dates (as calendar dates without time)
   const startParsed = parse(startDate, 'yyyy-MM-dd', new Date());

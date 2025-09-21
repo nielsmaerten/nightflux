@@ -69,7 +69,7 @@ interface Overlays {
 }
 
 export default class BasalClient {
-  constructor(private ns: Nightscout) {}
+  constructor(private ns: Nightscout) { }
 
   /**
    * Compute basal segments for a specific local day (YYYY-MM-DD).
@@ -173,7 +173,7 @@ export default class BasalClient {
     let skip = 0;
     const out: NightscoutTreatment[] = [];
     // Nightscout supports paging via skip+count; sort ascending for stable merge
-    for (;;) {
+    for (; ;) {
       const batch = (await this.ns.query('/api/v1/treatments.json', {
         params: {
           'find[created_at][$gte]': startISO,
@@ -204,7 +204,7 @@ export default class BasalClient {
     let skip = 0;
     const beforeMs = Date.parse(beforeISO);
     // Page descending in time using created_at to minimize data scanned
-    for (;;) {
+    for (; ;) {
       const batch = (await this.ns.query('/api/v1/treatments.json', {
         params: {
           'find[eventType]': 'Profile Switch',
@@ -253,8 +253,8 @@ function computeWindow(
   windowStart: Date;
   windowEnd: Date;
 } | null {
-  const localMidnight = `${dateStr}T00:00:00`;
-  const dayStart = fromZonedTime(localMidnight, zone);
+  const localDayStart = `${dateStr}T00:00:00`;
+  const dayStart = fromZonedTime(localDayStart, zone);
   if (Number.isNaN(dayStart.getTime())) return null;
   const dayEnd = addDays(dayStart, 1);
   const windowStart = addHours(dayStart, -24);
@@ -360,12 +360,12 @@ function buildBaseline(
       profileJson: ev.profileJson,
       // Many servers use `percentage`; some use `percent` or `profilePercentage`
       percentage: (typeof (ev as any).percentage === 'number' &&
-      Number.isFinite((ev as any).percentage)
+        Number.isFinite((ev as any).percentage)
         ? (ev as any).percentage
         : typeof (ev as any).percent === 'number' && Number.isFinite((ev as any).percent)
           ? (ev as any).percent
           : typeof (ev as any).profilePercentage === 'number' &&
-              Number.isFinite((ev as any).profilePercentage)
+            Number.isFinite((ev as any).profilePercentage)
             ? (ev as any).profilePercentage
             : 100) as number,
     }))

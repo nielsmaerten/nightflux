@@ -39,5 +39,6 @@ export function includeCustomInstructions(
   if (!enabled) return report;
   const message = readCustomInstructions();
   if (!message) return report;
-  return { custom_instructions: message, ...report };
+  const { $schema, ...rest } = report;
+  return { $schema, custom_instructions: message, ...rest };
 }
