@@ -1,10 +1,6 @@
 import Nightscout from '../../clients/nightscout.js';
 import { CgmArraySchema } from '../../domain/schema.js';
-import {
-  validateTimeRange,
-  validateWithSchema,
-  dedupByUtcTime,
-} from '../../utils/common-utils.js';
+import { validateTimeRange, validateWithSchema, dedupByUtcTime } from '../../utils/common-utils.js';
 import { formatInTimeZone } from 'date-fns-tz';
 import { assertValidTimezone } from '../../utils/timezones.js';
 
@@ -48,11 +44,7 @@ export default class CgmClient {
 
         const timestamp = Math.floor(entry.date / 1000);
         const mgDl = entry.sgv;
-        const local_time = formatInTimeZone(
-          new Date(entry.date),
-          tz,
-          "yyyy-MM-dd'T'HH:mm:ssXXX",
-        );
+        const local_time = formatInTimeZone(new Date(entry.date), tz, "yyyy-MM-dd'T'HH:mm:ssXXX");
         results.push({ utc_time: timestamp, local_time, mgDl });
         if (entry.date < oldest) oldest = entry.date;
       }

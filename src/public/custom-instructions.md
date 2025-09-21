@@ -1,6 +1,5 @@
 This file contains a structured export of diabetes data in YAML. Help me analyze and understand the data in here.
 
-
 ## File structure overview
 
 ### Top level

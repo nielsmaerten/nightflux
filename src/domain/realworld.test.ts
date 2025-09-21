@@ -58,9 +58,7 @@ describe('Real world validation', () => {
     const dailyCarbs = Object.keys(days).reduce(
       (acc, day) => {
         const { start, end } = toUtcRange(day, day, tz);
-        acc[day] = carbEntries.filter(
-          (entry) => entry.utc_time >= start && entry.utc_time < end,
-        );
+        acc[day] = carbEntries.filter((entry) => entry.utc_time >= start && entry.utc_time < end);
         return acc;
       },
       {} as Record<string, typeof carbEntries>,
@@ -69,9 +67,7 @@ describe('Real world validation', () => {
     const dailyBolus = Object.keys(days).reduce(
       (acc, day) => {
         const { start, end } = toUtcRange(day, day, tz);
-        acc[day] = bolusEntries.filter(
-          (entry) => entry.utc_time >= start && entry.utc_time < end,
-        );
+        acc[day] = bolusEntries.filter((entry) => entry.utc_time >= start && entry.utc_time < end);
         return acc;
       },
       {} as Record<string, typeof bolusEntries>,

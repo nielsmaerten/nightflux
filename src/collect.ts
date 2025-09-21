@@ -177,12 +177,8 @@ export async function collectExport(
 
     // Bucket signal and treatment entries
     const cgm = cgmAll.filter((entry) => entry.utc_time >= dayStart && entry.utc_time < dayEnd);
-    const carbs = carbsAll.filter(
-      (entry) => entry.utc_time >= dayStart && entry.utc_time < dayEnd,
-    );
-    const bolus = bolusAll.filter(
-      (entry) => entry.utc_time >= dayStart && entry.utc_time < dayEnd,
-    );
+    const carbs = carbsAll.filter((entry) => entry.utc_time >= dayStart && entry.utc_time < dayEnd);
+    const bolus = bolusAll.filter((entry) => entry.utc_time >= dayStart && entry.utc_time < dayEnd);
 
     // Basal segments for the day
     const basalDay = await basalClient.computeBasalDay(dayStr, tz);
@@ -207,11 +203,7 @@ export async function collectExport(
       "yyyy-MM-dd'T'HH:mm:ssXXX",
     );
 
-    const localDayEnd = formatInTimeZone(
-      new Date(dayEnd * 1000),
-      tz,
-      "yyyy-MM-dd'T'HH:mm:ssXXX",
-    );
+    const localDayEnd = formatInTimeZone(new Date(dayEnd * 1000), tz, "yyyy-MM-dd'T'HH:mm:ssXXX");
 
     days.push({
       date: {

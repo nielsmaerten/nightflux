@@ -25,7 +25,13 @@ export interface NightfluxReport {
     text: string;
   }[];
   days: {
-    date: { timezone: string; utc_midnight: number; local_start: string; utc_end: number; local_end: string };
+    date: {
+      timezone: string;
+      utc_midnight: number;
+      local_start: string;
+      utc_end: number;
+      local_end: string;
+    };
     activeProfiles: { id: string; pct: number; utc_activation_time: number }[];
     cgm: { utc_time: number; local_time: string; mgDl: number }[];
     carbs: { utc_time: number; local_time: string; grams: number }[];

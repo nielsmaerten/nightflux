@@ -26,10 +26,7 @@ describe('Nightscout profiles (integration)', () => {
     for (const profile of profiles) {
       expect(profile.blocks.length).toBeGreaterThan(0);
       expect(
-        profile.blocks.reduce(
-          (sum: number, block: any) => sum + (block.units_hourly || 0),
-          0,
-        ),
+        profile.blocks.reduce((sum: number, block: any) => sum + (block.units_hourly || 0), 0),
       ).toBeGreaterThan(0);
     }
   });

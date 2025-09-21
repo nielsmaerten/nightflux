@@ -92,11 +92,7 @@ export default class CarbsClient {
             return ms
               ? {
                   utc_time: Math.floor(ms / 1000),
-                  local_time: formatInTimeZone(
-                    new Date(ms),
-                    tz,
-                    "yyyy-MM-dd'T'HH:mm:ssXXX",
-                  ),
+                  local_time: formatInTimeZone(new Date(ms), tz, "yyyy-MM-dd'T'HH:mm:ssXXX"),
                   grams: treatment.carbs!,
                 }
               : null;

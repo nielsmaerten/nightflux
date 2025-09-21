@@ -103,11 +103,7 @@ export default class BolusClient {
             return iu > 0 && ms
               ? {
                   utc_time: Math.floor(ms / 1000),
-                  local_time: formatInTimeZone(
-                    new Date(ms),
-                    tz,
-                    "yyyy-MM-dd'T'HH:mm:ssXXX",
-                  ),
+                  local_time: formatInTimeZone(new Date(ms), tz, "yyyy-MM-dd'T'HH:mm:ssXXX"),
                   units: iu,
                 }
               : null;

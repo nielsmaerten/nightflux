@@ -15,10 +15,7 @@ function round(n: number, dp = 4): number {
 export function fingerprintBlocks(blocks: ProfileBlock[]): string {
   const canonical = (blocks || [])
     .map((block) => ({
-      minutes_past_midnight: Math.max(
-        0,
-        Math.min(1440, Math.floor(block.minutes_past_midnight)),
-      ),
+      minutes_past_midnight: Math.max(0, Math.min(1440, Math.floor(block.minutes_past_midnight))),
       units_hourly: round(block.units_hourly),
     }))
     .sort((a, b) => a.minutes_past_midnight - b.minutes_past_midnight);
