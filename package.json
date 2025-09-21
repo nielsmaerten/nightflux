@@ -1,6 +1,6 @@
 {
   "name": "@nielsmaerten/nightflux",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -21,7 +21,7 @@
     "cli": "tsx src/cli.ts",
     "format": "prettier --write src",
     "format:check": "prettier --check src",
-    "prepare": "npm run -s build",
+    "prepublishOnly": "npm run -s build",
     "prepack": "npm run build",
     "serve": "tsx src/serve.ts",
     "test": "vitest run",
