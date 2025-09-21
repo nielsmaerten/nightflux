@@ -16,7 +16,9 @@ jobs:
         with:
           node-version: 22
       - run: npm i
-      - run: npm test
+      - run: npm run build
+      - run: npm run typecheck
+      - run: npm run format:check
 
   publish-gpr:
     needs: build
