@@ -10,8 +10,33 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      version_changed: ${{ steps.version_check.outputs.changed }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: version_check
+        name: Detect package.json version change
+        run: |
+          set -e
+          CURRENT=$(jq -r .version package.json)
+          BASE="${{ github.event.before }}"
+          if git cat-file -e "$BASE^{commit}" 2>/dev/null; then
+            PREV_FILE=$(git show "$BASE:package.json" 2>/dev/null || echo "")
+          else
+            PREV_FILE=$(git show HEAD^:package.json 2>/dev/null || echo "")
+          fi
+          if [ -n "$PREV_FILE" ]; then
+            PREV=$(echo "$PREV_FILE" | jq -r .version)
+          else
+            PREV=""
+          fi
+          if [ "$CURRENT" != "$PREV" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
       - uses: actions/setup-node@v4
         with:
           node-version: 18
@@ -25,6 +50,7 @@ jobs:
 
   publish-gpr:
     needs: build
+    if: needs.build.outputs.version_changed == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read

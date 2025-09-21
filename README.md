@@ -3,9 +3,15 @@
 Analyze your Nightscout data with the help of AI.
 
 Nightflux produces an AI-optimized, self-contained report of your Nightscout history. 
-Share the report with an AI like ChatGPT*, and it will answer your questions, spot trends & analyze patterns for you.
+Share the report with an AI like ChatGPT and ask it to follow the instructions included in the file.
 
-\* Model recommendation: _"GPT-5 Thinking"_  _(September 2025)_
+Now, the AI will be able to answer questions like:
+- Help me discover patterns in my glucose data
+- Create a chart of my deviations during the day
+- When am I most likely to go low?
+- ...
+
+_Note: For best results, use a high-reasoning model like GPT-5 Thinking_
 
 ## Quick start
 
