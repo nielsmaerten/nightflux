@@ -7,6 +7,8 @@ import ProfileClient from '../resources/profiles/profiles.js';
 import BasalClient from '../resources/basal/basal.js';
 import { toUtcRange } from '../utils/timezones.js';
 
+const isGitHubActions = process.env.GITHUB_ACTIONS === 'true';
+
 // Expected output:
 const days: Record<string, { carbs: number; bolus: number; basal: number }> = {
   '2025-08-18': { carbs: 143, bolus: 48.4, basal: 29 },
@@ -88,24 +90,28 @@ describe('Real world validation', () => {
   }, 60_000);
 
   for (const day of Object.keys(days)) {
-    it(`computes basal day for ${day}`, async () => {
-      const basalClient = new BasalClient(new Nightscout());
-      //if (day !== '2025-08-31') return; // Temporarily limit to a single day while we verify results
-      const basalDay = await basalClient.computeBasalDay(day, tz);
-      const expectedBasal = days[day].basal;
-      const actualBasal = basalDay.meta.sum;
+    it.skipIf(isGitHubActions)(
+      `computes basal day for ${day}`,
+      async () => {
+        const basalClient = new BasalClient(new Nightscout());
+        //if (day !== '2025-08-31') return; // Temporarily limit to a single day while we verify results
+        const basalDay = await basalClient.computeBasalDay(day, tz);
+        const expectedBasal = days[day].basal;
+        const actualBasal = basalDay.meta.sum;
 
-      const allowedDiff = 3; // units
-      const diff = actualBasal - expectedBasal;
-      const fn = Math.abs(diff) > allowedDiff ? console.warn : console.log;
-      const prefix = Math.abs(diff) > allowedDiff ? '❌' : '  ';
-      fn(
-        `${prefix}diff(${diff.toFixed(2)}) - ${day}: expected(${expectedBasal.toFixed(2)}), actual(${actualBasal.toFixed(2)})`,
-      );
-      if (Math.abs(diff) > allowedDiff)
-        throw new Error(
-          `Basal total for ${day} is off by more than ${allowedDiff} units: expected ${expectedBasal}, got ${actualBasal} (diff ${diff.toFixed(2)})`,
+        const allowedDiff = 3; // units
+        const diff = actualBasal - expectedBasal;
+        const fn = Math.abs(diff) > allowedDiff ? console.warn : console.log;
+        const prefix = Math.abs(diff) > allowedDiff ? '❌' : '  ';
+        fn(
+          `${prefix}diff(${diff.toFixed(2)}) - ${day}: expected(${expectedBasal.toFixed(2)}), actual(${actualBasal.toFixed(2)})`,
         );
-    }, 10_000);
+        if (Math.abs(diff) > allowedDiff)
+          throw new Error(
+            `Basal total for ${day} is off by more than ${allowedDiff} units: expected ${expectedBasal}, got ${actualBasal} (diff ${diff.toFixed(2)})`,
+          );
+      },
+      10_000,
+    );
   }
 });
