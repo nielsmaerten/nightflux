@@ -27,7 +27,7 @@ export interface NightfluxReport {
   days: {
     date: {
       timezone: string;
-      utc_midnight: number;
+      utc_start: number;
       local_start: string;
       utc_end: number;
       local_end: string;
@@ -88,7 +88,7 @@ export const NoteSchema = z
 export const DayDateSchema = z
   .object({
     timezone: z.string(),
-    utc_midnight: z.number().int(),
+    utc_start: z.number().int(),
     local_start: z.string(),
     utc_end: z.number().int(),
     local_end: z.string(),

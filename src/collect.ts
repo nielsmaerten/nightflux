@@ -208,7 +208,7 @@ export async function collectExport(
     days.push({
       date: {
         timezone: tz,
-        utc_midnight: dayStart,
+        utc_start: dayStart,
         local_start: localDayStart,
         utc_end: dayEnd,
         local_end: localDayEnd,

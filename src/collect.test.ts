@@ -21,7 +21,7 @@ describe('Collect Export (integration)', () => {
     );
     for (const day of data.days) {
       const tz = day.date.timezone;
-      const dateStr = formatInTimeZone(new Date(day.date.utc_midnight * 1000), tz, 'yyyy-MM-dd');
+      const dateStr = formatInTimeZone(new Date(day.date.utc_start * 1000), tz, 'yyyy-MM-dd');
       const cgmCount = day.cgm.length;
       const carbsTotal = day.carbs.reduce((a, e) => a + (e.grams || 0), 0);
       const bolusTotal = day.bolus.reduce((a, e) => a + (e.units || 0), 0);
