@@ -23,6 +23,7 @@
     "format:check": "prettier --check src",
     "prepublishOnly": "npm run -s build",
     "prepack": "npm run build",
+    "prepare": "npm run -s build",
     "serve": "tsx src/serve.ts",
     "test": "vitest run",
     "test:watch": "vitest",
