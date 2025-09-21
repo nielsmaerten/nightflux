@@ -358,7 +358,7 @@ function App() {
 
           </p><p>
           Upload the
-          report file to ChatGPT and ask it to <a href="./gpt.png">"Read the custom instructions in this file"</a>.
+          report to ChatGPT and ask it to "follow the instructions in the file".
         <p>
         From there, you can ask it questions about your data, like:
         </p>

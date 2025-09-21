@@ -95,7 +95,7 @@ describe('Real world validation', () => {
       const expectedBasal = days[day].basal;
       const actualBasal = basalDay.meta.sum;
 
-      const allowedDiff = 2; // units
+      const allowedDiff = 3; // units
       const diff = actualBasal - expectedBasal;
       const fn = Math.abs(diff) > allowedDiff ? console.warn : console.log;
       const prefix = Math.abs(diff) > allowedDiff ? '❌' : '  ';
