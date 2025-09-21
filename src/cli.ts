@@ -89,7 +89,7 @@ function writeReportFile(report: NightfluxReport, params: WriteReportParams): vo
 
 const program = new Command();
 program
-  .name('nightflux-core')
+  .name('nightflux')
   .description('Export Nightscout data to a report file (YAML by default)')
   .version(readPackageVersion(), '-V, --version', 'output the version number')
   .argument('[url]', 'Nightscout base URL with ?token=...')

@@ -373,7 +373,7 @@ function App() {
       </section>
 <p class="tip">
           Your data is removed immediately after the report is created. Prefer to keep everything local? You can${' '}
-          <a href="https://github.com/nielsmaerten/nightflux-core">generate</a> the same report from the command line.
+          <a href="https://github.com/nielsmaerten/nightflux">generate</a> the same report from the command line.
         </p>
       <p class="tip">Tip: Your URL is remembered locally on this device.</p>
     </div>

@@ -78,7 +78,7 @@ export async function startServer(
 
   await app.listen({ host, port });
   // eslint-disable-next-line no-console
-  console.log(`nightflux-core server listening on http://${host}:${port}`);
+  console.log(`nightflux server listening on http://${host}:${port}`);
 
   const stop = async () => {
     try {

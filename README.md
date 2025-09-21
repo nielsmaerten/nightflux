@@ -20,12 +20,12 @@ Install or run via npx (Node 18.18+):
 
 ```bash
 # Using npx from the registry after publish
-npx github:nielsmaerten:nightflux-core https://my-nightscout.com?token=abc123 [options]
+npx github:nielsmaerten:nightflux https://my-nightscout.com?token=abc123 [options]
 
 # Or, install for easy access:
-npm i -g github:nielsmaerten:nightflux-core
+npm i -g github:nielsmaerten:nightflux
 # Then:
-npx nightflux-core [url] [options]
+npx nightflux [url] [options]
 ```
 
 ### Options
@@ -50,8 +50,8 @@ npx nightflux-core [url] [options]
 
 ```ts
 // Install with: 
-// npm i github:nielsmaerten:nightflux-core
-import { buildNightscoutExport } from 'nightflux-core';
+// npm i github:nielsmaerten:nightflux
+import { buildNightscoutExport } from 'nightflux';
 
 const url = 'https://your.ns.example?token=READONLY_TOKEN';
 const start = '2025-08-10';

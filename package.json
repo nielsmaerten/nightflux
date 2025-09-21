@@ -1,12 +1,12 @@
 {
-  "name": "nightflux-core",
+  "name": "nightflux",
   "version": "1.0.0",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": {
-    "nightflux-core": "./dist/cli.js"
+    "nightflux": "./dist/cli.js"
   },
   "exports": {
     ".": {
