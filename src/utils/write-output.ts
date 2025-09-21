@@ -1,9 +1,9 @@
 import path from 'path';
 import fs from 'fs';
 import { NightfluxReport } from 'src/domain/schema';
-import logger from './logger';
+import logger from './logger.js';
 import { stringify as yamlStringify } from 'yaml';
-import { includeCustomInstructions } from './custom-instructions';
+import { includeCustomInstructions } from './custom-instructions.js';
 
 type WriteOutputOptions = {
   outputFile: string;
