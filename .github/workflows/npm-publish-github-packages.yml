@@ -26,6 +26,15 @@ jobs:
   publish-gpr:
     needs: build
     runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'push' &&
+      (
+        github.ref == 'refs/heads/main' &&
+        (
+          (hashFiles('package.json') != hashFiles('package.json', 'refs/heads/main^')) ||
+          (steps.check_version.outputs.changed == 'true')
+        )
+      )
     permissions:
       contents: read
       packages: write
