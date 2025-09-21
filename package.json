@@ -21,9 +21,8 @@
     "cli": "tsx src/cli.ts",
     "format": "prettier --write src",
     "format:check": "prettier --check src",
-    "prepublishOnly": "npm run -s build",
+    "prepare": "npm run -s build",
     "prepack": "npm run build",
-    "generate:schema": "tsx src/domain/json-schema.ts > src/domain/nightflux-report.schema.json",
     "serve": "tsx src/serve.ts",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -36,12 +35,13 @@
   "devDependencies": {
     "@types/node": "^24.3.0",
     "prettier": "^3.3.3",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2",
     "rimraf": "^6.0.1",
     "vitest": "^3.2.4"
   },
   "files": [
-    "dist",
-    "src/domain/nightflux-report.schema.json"
+    "dist"
   ],
   "dependencies": {
     "@fastify/static": "^7.0.4",
@@ -52,8 +52,6 @@
     "dotenv": "^16.6.1",
     "fastify": "^4.28.1",
     "proxy-agent": "^6.5.0",
-    "tsx": "^4.20.5",
-    "typescript": "^5.9.2",
     "yaml": "^2.8.1",
     "zod": "^4.1.0"
   }
