@@ -4,6 +4,9 @@
     "config:recommended"
   ],
   "platformAutomerge": true,
+  "schedule": [
+    "before 6am"
+  ],
   "packageRules": [
     {
       "matchUpdateTypes": [
@@ -14,7 +17,7 @@
         "lockFileMaintenance"
       ],
       "automerge": true,
-      "automergeType": "pr"
+      "automergeType": "pr",
     },
     {
       "matchUpdateTypes": [
