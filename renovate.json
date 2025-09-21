@@ -4,7 +4,7 @@
     "config:recommended"
   ],
   "platformAutomerge": true,
-  "schedule": [
+  "automergeSchedule": [
     "before 6am"
   ],
   "packageRules": [
