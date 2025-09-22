@@ -44,6 +44,37 @@ function resetParticleVelocities(instance) {
   });
 }
 
+function easeOutCubic(t) {
+  return 1 - (1 - t) ** 3;
+}
+
+function easeInOutSine(t) {
+  return -(Math.cos(Math.PI * t) - 1) / 2;
+}
+
+function computeFauxProgress(elapsedSeconds, totalSeconds) {
+  if (totalSeconds <= 0) return 0;
+  const clampedElapsed = Math.max(0, elapsedSeconds);
+  const ratio = clampedElapsed / totalSeconds;
+  const fastPhaseLimit = 0.35;
+  const fastProgress = 0.75;
+
+  if (ratio <= fastPhaseLimit) {
+    const normalizedFast = ratio / fastPhaseLimit;
+    return fastProgress * easeOutCubic(normalizedFast);
+  }
+
+  if (ratio <= 1) {
+    const normalizedSlow = (ratio - fastPhaseLimit) / (1 - fastPhaseLimit);
+    const slowPortion = 0.23;
+    return fastProgress + slowPortion * easeInOutSine(normalizedSlow);
+  }
+
+  const overflow = ratio - 1;
+  const trickle = Math.min(0.02, overflow / 12);
+  return Math.min(0.99, 0.98 + trickle);
+}
+
 function toggleBlackholeEffect(enabled) {
   const instance = getParticlesInstance();
   if (!instance) return;
@@ -210,12 +241,16 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [estimatedDurationSeconds, setEstimatedDurationSeconds] = useState(0);
   const [timeRemainingSeconds, setTimeRemainingSeconds] = useState(0);
+  const [progressPercent, setProgressPercent] = useState(0);
   const [error, setError] = useState('');
   const startInputRef = useRef(null);
   const endInputRef = useRef(null);
   const startPickerRef = useRef(null);
   const endPickerRef = useRef(null);
   const countdownRef = useRef(null);
+  const progressAnimationRef = useRef(null);
+  const progressStartTimeRef = useRef(0);
+  const resetProgressTimeoutRef = useRef(null);
 
   useEffect(() => {
     initParticles();
@@ -341,6 +376,7 @@ function App() {
       const estimateSeconds = estimateDurationSeconds(startDate, endDate);
       setEstimatedDurationSeconds(estimateSeconds);
       setTimeRemainingSeconds(estimateSeconds);
+      setProgressPercent(0);
       setIsLoading(true);
       toggleBlackholeEffect(true);
       const responseText = await postReport(payload);
@@ -350,10 +386,18 @@ function App() {
       console.error(err);
       setError('Something went wrong while building your report. Please try again.');
     } finally {
-      setIsLoading(false);
+      setProgressPercent(100);
       toggleBlackholeEffect(false);
-      setEstimatedDurationSeconds(0);
-      setTimeRemainingSeconds(0);
+      if (resetProgressTimeoutRef.current) {
+        clearTimeout(resetProgressTimeoutRef.current);
+      }
+      resetProgressTimeoutRef.current = setTimeout(() => {
+        setIsLoading(false);
+        setEstimatedDurationSeconds(0);
+        setTimeRemainingSeconds(0);
+        setProgressPercent(0);
+        resetProgressTimeoutRef.current = null;
+      }, 220);
     }
   }
 
@@ -383,13 +427,53 @@ function App() {
       }
     };
   }, [isLoading, estimatedDurationSeconds]);
+  
+  useEffect(() => {
+    if (!isLoading || estimatedDurationSeconds <= 0) {
+      if (progressAnimationRef.current) {
+        cancelAnimationFrame(progressAnimationRef.current);
+        progressAnimationRef.current = null;
+      }
+      return undefined;
+    }
 
-  const progressPercent = useMemo(() => {
-    if (!isLoading || estimatedDurationSeconds <= 0) return 0;
-    const elapsed = estimatedDurationSeconds - timeRemainingSeconds;
-    const ratio = Math.min(1, Math.max(0, elapsed / estimatedDurationSeconds));
-    return Math.min(99, Math.round(ratio * 100));
-  }, [isLoading, estimatedDurationSeconds, timeRemainingSeconds]);
+    progressStartTimeRef.current = performance.now();
+    if (progressAnimationRef.current) {
+      cancelAnimationFrame(progressAnimationRef.current);
+      progressAnimationRef.current = null;
+    }
+
+    const tick = () => {
+      const elapsedMs = performance.now() - progressStartTimeRef.current;
+      const faux = computeFauxProgress(elapsedMs / 1000, estimatedDurationSeconds);
+      setProgressPercent((previous) => {
+        const capped = Math.min(0.99, faux);
+        const next = Math.max(previous, Math.min(99, Math.floor(capped * 100)));
+        return next === previous ? previous : next;
+      });
+      progressAnimationRef.current = requestAnimationFrame(tick);
+    };
+
+    progressAnimationRef.current = requestAnimationFrame(tick);
+
+    return () => {
+      if (progressAnimationRef.current) {
+        cancelAnimationFrame(progressAnimationRef.current);
+        progressAnimationRef.current = null;
+      }
+    };
+  }, [isLoading, estimatedDurationSeconds]);
+
+  useEffect(() => {
+    return () => {
+      if (progressAnimationRef.current) {
+        cancelAnimationFrame(progressAnimationRef.current);
+      }
+      if (resetProgressTimeoutRef.current) {
+        clearTimeout(resetProgressTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const progressLabel = useMemo(() => {
     if (!isLoading) return '';
@@ -444,11 +528,23 @@ function App() {
         </div>
 
         <div class="button-row">
-          <button id="build-report-btn" class="primary" type="submit" disabled=${!isFormValid}>
-            ${isLoading
-      ? `Collecting data...${progressPercent ? ` ${progressPercent}%` : ''}`
-      : 'Build Report'
-    }
+          <button
+            id="build-report-btn"
+            class=${`primary ${isLoading ? 'loading' : ''}`}
+            type="submit"
+            disabled=${!isFormValid}
+          >
+            ${isLoading &&
+            html`<span
+              class="progress-fill"
+              style=${{ width: `${progressPercent}%` }}
+            ></span>`}
+            <span class="button-label">
+              ${isLoading
+        ? `Collecting data...${progressPercent ? ` ${progressPercent}%` : ''}`
+        : 'Build Report'
+      }
+            </span>
           </button>
           ${isLoading && progressLabel && html`<p class="loading-text">${progressLabel}</p>`}
           ${error && html`<p class="error-text">${error}</p>`}
