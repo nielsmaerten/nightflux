@@ -145,6 +145,53 @@ function clampToYesterday(dateIso) {
   return dateIso > yesterdayIso ? yesterdayIso : dateIso;
 }
 
+function calculateInclusiveDays(startIso, endIso) {
+  const start = new Date(`${startIso}T00:00:00`);
+  const end = new Date(`${endIso}T00:00:00`);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return 0;
+  const diffMs = end.getTime() - start.getTime();
+  const dayInMs = 24 * 60 * 60 * 1000;
+  const days = Math.floor(diffMs / dayInMs) + 1;
+  return Math.max(days, 0);
+}
+
+function formatRemainingText(remainingMs) {
+  if (remainingMs <= 0) return 'Wrapping up...';
+  const seconds = Math.ceil(remainingMs / 1000);
+  if (seconds >= 120) {
+    const minutes = Math.round(seconds / 60);
+    return `Approximately ${minutes} minutes left.`;
+  }
+  if (seconds >= 60) {
+    return 'Approximately 1 minute left.';
+  }
+  if (seconds >= 30) {
+    return 'Less than a minute left.';
+  }
+  if (seconds >= 10) {
+    return 'Less than 30 seconds left.';
+  }
+  return 'A few seconds remaining...';
+}
+
+function formatTotalEstimate(totalMs) {
+  const seconds = Math.ceil(totalMs / 1000);
+  if (seconds >= 120) {
+    const minutes = Math.round(seconds / 60);
+    return `about ${minutes} minutes`;
+  }
+  if (seconds >= 60) {
+    return 'about a minute';
+  }
+  if (seconds >= 30) {
+    return 'under a minute';
+  }
+  if (seconds >= 10) {
+    return 'less than 30 seconds';
+  }
+  return 'just a few seconds';
+}
+
 function App() {
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
@@ -159,10 +206,12 @@ function App() {
   const [endDate, setEndDate] = useState(formatDateIso(defaultEnd));
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [countdownText, setCountdownText] = useState('');
   const startInputRef = useRef(null);
   const endInputRef = useRef(null);
   const startPickerRef = useRef(null);
   const endPickerRef = useRef(null);
+  const loadingStartRef = useRef(null);
 
   useEffect(() => {
     initParticles();
@@ -273,6 +322,40 @@ function App() {
 
   const isFormValid = isValidUrl && isDateRangeValid && !isLoading;
 
+  const estimatedDurationMs = useMemo(() => {
+    if (!isDateRangeValid) return 0;
+    const days = calculateInclusiveDays(startDate, endDate);
+    return days * 1000;
+  }, [isDateRangeValid, startDate, endDate]);
+
+  useEffect(() => {
+    if (!isLoading) {
+      loadingStartRef.current = null;
+      setCountdownText('');
+      return;
+    }
+
+    loadingStartRef.current = Date.now();
+
+    if (!estimatedDurationMs) {
+      setCountdownText('Preparing your report...');
+      return;
+    }
+
+    const updateCountdown = () => {
+      if (!loadingStartRef.current) return;
+      const elapsed = Date.now() - loadingStartRef.current;
+      const remaining = Math.max(estimatedDurationMs - elapsed, 0);
+      setCountdownText(formatRemainingText(remaining));
+    };
+
+    updateCountdown();
+    const intervalId = window.setInterval(updateCountdown, 500);
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [isLoading, estimatedDurationMs]);
+
   async function handleSubmit(event) {
     event.preventDefault();
     setError('');
@@ -344,6 +427,15 @@ function App() {
           <button id="build-report-btn" class="primary" type="submit" disabled=${!isFormValid}>
             ${isLoading ? 'Collecting data...' : 'Build Report'}
           </button>
+          ${
+            isLoading && countdownText
+              ? html`<p class="helper-text">${countdownText}</p>`
+              : !isLoading && estimatedDurationMs
+              ? html`<p class="helper-text">Estimated build time: ${formatTotalEstimate(
+                  estimatedDurationMs,
+                )}.</p>`
+              : null
+          }
           ${error && html`<p class="error-text">${error}</p>`}
         </div>
       </form>
