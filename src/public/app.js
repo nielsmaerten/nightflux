@@ -144,9 +144,9 @@ const MS_PER_DAY = 24 * 60 * 60 * 1000;
 /**
  * Estimates how long it would take to generate a report for the given date range.
  * On average, it takes about 1.5 seconds per day of data.
- * @param {*} startIso 
- * @param {*} endIso 
- * @returns 
+ * @param {*} startIso
+ * @param {*} endIso
+ * @returns
  */
 function estimateDurationSeconds(startIso, endIso) {
   if (!startIso || !endIso) return 0;
@@ -427,7 +427,7 @@ function App() {
       }
     };
   }, [isLoading, estimatedDurationSeconds]);
-  
+
   useEffect(() => {
     if (!isLoading || estimatedDurationSeconds <= 0) {
       if (progressAnimationRef.current) {
@@ -534,16 +534,16 @@ function App() {
             type="submit"
             disabled=${!isFormValid}
           >
-            ${isLoading &&
-            html`<span
-              class="progress-fill"
-              style=${{ width: `${progressPercent}%` }}
-            ></span>`}
+            ${
+              isLoading &&
+              html`<span class="progress-fill" style=${{ width: `${progressPercent}%` }}></span>`
+            }
             <span class="button-label">
-              ${isLoading
-        ? `Collecting data...${progressPercent ? ` ${progressPercent}%` : ''}`
-        : 'Build Report'
-      }
+              ${
+                isLoading
+                  ? `Collecting data...${progressPercent ? ` ${progressPercent}%` : ''}`
+                  : 'Build Report'
+              }
             </span>
           </button>
           ${isLoading && progressLabel && html`<p class="loading-text">${progressLabel}</p>`}
