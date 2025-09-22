@@ -108,6 +108,50 @@ function toggleBlackholeEffect(enabled) {
   }
 }
 
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+function estimateDurationSeconds(startIso, endIso) {
+  if (!startIso || !endIso) return 0;
+  const startMs = Date.parse(`${startIso}T00:00:00Z`);
+  const endMs = Date.parse(`${endIso}T00:00:00Z`);
+  if (Number.isNaN(startMs) || Number.isNaN(endMs) || endMs < startMs) {
+    return 0;
+  }
+
+  const diffDays = Math.floor((endMs - startMs) / MS_PER_DAY);
+  const totalDays = diffDays + 1;
+  return Math.max(1, totalDays);
+}
+
+function formatTimeRemainingLabel(remainingSeconds, isPastEstimate) {
+  if (isPastEstimate) {
+    return 'Taking a bit longer than expected—hang tight!';
+  }
+
+  if (remainingSeconds >= 120) {
+    const minutes = Math.ceil(remainingSeconds / 60);
+    return `Approximately ${minutes} minute${minutes === 1 ? '' : 's'} left.`;
+  }
+
+  if (remainingSeconds >= 75) {
+    return 'About a minute left.';
+  }
+
+  if (remainingSeconds >= 45) {
+    return 'Less than a minute left.';
+  }
+
+  if (remainingSeconds >= 15) {
+    return 'A few seconds left.';
+  }
+
+  if (remainingSeconds > 0) {
+    return 'Almost done...';
+  }
+
+  return '';
+}
+
 async function postReport(payload) {
   const response = await fetch('/collect/v1', {
     method: 'POST',
@@ -158,11 +202,14 @@ function App() {
   const [startDate, setStartDate] = useState(formatDateIso(defaultStart));
   const [endDate, setEndDate] = useState(formatDateIso(defaultEnd));
   const [isLoading, setIsLoading] = useState(false);
+  const [estimatedDurationSeconds, setEstimatedDurationSeconds] = useState(0);
+  const [timeRemainingSeconds, setTimeRemainingSeconds] = useState(0);
   const [error, setError] = useState('');
   const startInputRef = useRef(null);
   const endInputRef = useRef(null);
   const startPickerRef = useRef(null);
   const endPickerRef = useRef(null);
+  const countdownRef = useRef(null);
 
   useEffect(() => {
     initParticles();
@@ -285,6 +332,9 @@ function App() {
     };
 
     try {
+      const estimateSeconds = estimateDurationSeconds(startDate, endDate);
+      setEstimatedDurationSeconds(estimateSeconds);
+      setTimeRemainingSeconds(estimateSeconds);
       setIsLoading(true);
       toggleBlackholeEffect(true);
       const responseText = await postReport(payload);
@@ -296,8 +346,55 @@ function App() {
     } finally {
       setIsLoading(false);
       toggleBlackholeEffect(false);
+      setEstimatedDurationSeconds(0);
+      setTimeRemainingSeconds(0);
     }
   }
+
+  useEffect(() => {
+    if (countdownRef.current) {
+      clearInterval(countdownRef.current);
+      countdownRef.current = null;
+    }
+
+    if (!isLoading || estimatedDurationSeconds <= 0) {
+      return undefined;
+    }
+
+    countdownRef.current = setInterval(() => {
+      setTimeRemainingSeconds((previous) => {
+        if (previous <= 0) {
+          return 0;
+        }
+        return previous - 1;
+      });
+    }, 1000);
+
+    return () => {
+      if (countdownRef.current) {
+        clearInterval(countdownRef.current);
+        countdownRef.current = null;
+      }
+    };
+  }, [isLoading, estimatedDurationSeconds]);
+
+  const progressPercent = useMemo(() => {
+    if (!isLoading || estimatedDurationSeconds <= 0) return 0;
+    const elapsed = estimatedDurationSeconds - timeRemainingSeconds;
+    const ratio = Math.min(1, Math.max(0, elapsed / estimatedDurationSeconds));
+    return Math.min(99, Math.round(ratio * 100));
+  }, [isLoading, estimatedDurationSeconds, timeRemainingSeconds]);
+
+  const progressLabel = useMemo(() => {
+    if (!isLoading) return '';
+    const pastEstimate = estimatedDurationSeconds > 0 && timeRemainingSeconds <= 0;
+    const label = formatTimeRemainingLabel(timeRemainingSeconds, pastEstimate);
+    if (label) return label;
+    if (pastEstimate) {
+      return 'Taking a bit longer than expected—hang tight!';
+    }
+    return '';
+  }, [isLoading, estimatedDurationSeconds, timeRemainingSeconds]);
 
   return html`
     <div>
@@ -342,8 +439,13 @@ function App() {
 
         <div class="button-row">
           <button id="build-report-btn" class="primary" type="submit" disabled=${!isFormValid}>
-            ${isLoading ? 'Collecting data...' : 'Build Report'}
+            ${
+              isLoading
+                ? `Collecting data...${progressPercent ? ` ${progressPercent}%` : ''}`
+                : 'Build Report'
+            }
           </button>
+          ${isLoading && progressLabel && html`<p class="loading-text">${progressLabel}</p>`}
           ${error && html`<p class="error-text">${error}</p>`}
         </div>
       </form>
