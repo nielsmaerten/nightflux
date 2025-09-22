@@ -144,6 +144,12 @@ button.primary:disabled {
   color: rgba(229, 236, 255, 0.66);
 }
 
+.progress-text {
+  font-size: 0.85rem;
+  color: rgba(229, 236, 255, 0.8);
+  font-style: italic;
+}
+
 .error-text {
   color: #ff8080;
   font-size: 0.82rem;

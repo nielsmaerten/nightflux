@@ -145,6 +145,52 @@ function clampToYesterday(dateIso) {
   return dateIso > yesterdayIso ? yesterdayIso : dateIso;
 }
 
+function calculateDayCount(startIso, endIso) {
+  const start = new Date(startIso);
+  const end = new Date(endIso);
+  const millisecondsPerDay = 24 * 60 * 60 * 1000;
+  const diffDays = Math.floor((end - start) / millisecondsPerDay) + 1;
+  return Number.isFinite(diffDays) ? Math.max(1, diffDays) : 0;
+}
+
+function formatRemainingTime(remainingMilliseconds, totalMilliseconds) {
+  if (remainingMilliseconds <= 0) {
+    if (totalMilliseconds > 2 * 60 * 1000) {
+      return 'Putting the finishing touches on your report...';
+    }
+    return 'Almost done...';
+  }
+
+  const remainingSeconds = Math.ceil(remainingMilliseconds / 1000);
+
+  if (remainingSeconds <= 5) {
+    return 'A few seconds left...';
+  }
+
+  if (remainingSeconds < 45) {
+    return `Less than a minute left (~${remainingSeconds} seconds).`;
+  }
+
+  if (remainingSeconds < 90) {
+    return 'About a minute left.';
+  }
+
+  const remainingMinutes = Math.ceil(remainingSeconds / 60);
+
+  if (remainingMinutes < 10) {
+    return `Approximately ${remainingMinutes} ${remainingMinutes === 1 ? 'minute' : 'minutes'} left.`;
+  }
+
+  const roundedMinutes = Math.ceil(remainingMinutes / 5) * 5;
+
+  if (roundedMinutes < 60) {
+    return `Approximately ${roundedMinutes} minutes left.`;
+  }
+
+  const remainingHours = Math.ceil(roundedMinutes / 60);
+  return `Approximately ${remainingHours} ${remainingHours === 1 ? 'hour' : 'hours'} left.`;
+}
+
 function App() {
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
@@ -159,10 +205,12 @@ function App() {
   const [endDate, setEndDate] = useState(formatDateIso(defaultEnd));
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [progressMessage, setProgressMessage] = useState('');
   const startInputRef = useRef(null);
   const endInputRef = useRef(null);
   const startPickerRef = useRef(null);
   const endPickerRef = useRef(null);
+  const progressTimerRef = useRef(null);
 
   useEffect(() => {
     initParticles();
@@ -273,6 +321,43 @@ function App() {
 
   const isFormValid = isValidUrl && isDateRangeValid && !isLoading;
 
+  const estimatedDurationMs = useMemo(() => {
+    if (!isDateRangeValid) return 0;
+    const dayCount = calculateDayCount(startDate, endDate);
+    if (!dayCount) return 0;
+    return dayCount * 1000;
+  }, [startDate, endDate, isDateRangeValid]);
+
+  useEffect(() => {
+    if (!isLoading) {
+      if (progressTimerRef.current) {
+        clearInterval(progressTimerRef.current);
+        progressTimerRef.current = null;
+      }
+      setProgressMessage('');
+      return;
+    }
+
+    const totalMilliseconds = estimatedDurationMs > 0 ? estimatedDurationMs : 5000;
+    const startTime = Date.now();
+
+    const updateMessage = () => {
+      const elapsed = Date.now() - startTime;
+      const remaining = Math.max(0, totalMilliseconds - elapsed);
+      setProgressMessage(formatRemainingTime(remaining, totalMilliseconds));
+    };
+
+    updateMessage();
+    progressTimerRef.current = setInterval(updateMessage, 500);
+
+    return () => {
+      if (progressTimerRef.current) {
+        clearInterval(progressTimerRef.current);
+        progressTimerRef.current = null;
+      }
+    };
+  }, [isLoading, estimatedDurationMs]);
+
   async function handleSubmit(event) {
     event.preventDefault();
     setError('');
@@ -344,6 +429,10 @@ function App() {
           <button id="build-report-btn" class="primary" type="submit" disabled=${!isFormValid}>
             ${isLoading ? 'Collecting data...' : 'Build Report'}
           </button>
+          ${isLoading &&
+          html`<p class="progress-text" role="status" aria-live="polite">${
+            progressMessage || 'Estimating time remaining...'
+          }</p>`}
           ${error && html`<p class="error-text">${error}</p>`}
         </div>
       </form>
