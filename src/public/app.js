@@ -110,6 +110,13 @@ function toggleBlackholeEffect(enabled) {
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
+/**
+ * Estimates how long it would take to generate a report for the given date range.
+ * On average, it takes about 1.5 seconds per day of data.
+ * @param {*} startIso 
+ * @param {*} endIso 
+ * @returns 
+ */
 function estimateDurationSeconds(startIso, endIso) {
   if (!startIso || !endIso) return 0;
   const startMs = Date.parse(`${startIso}T00:00:00Z`);
@@ -119,8 +126,7 @@ function estimateDurationSeconds(startIso, endIso) {
   }
 
   const diffDays = Math.floor((endMs - startMs) / MS_PER_DAY);
-  const totalDays = diffDays + 1;
-  return Math.max(1, totalDays);
+  return Math.max(1, diffDays) * 1.5;
 }
 
 function formatTimeRemainingLabel(remainingSeconds, isPastEstimate) {
@@ -439,11 +445,10 @@ function App() {
 
         <div class="button-row">
           <button id="build-report-btn" class="primary" type="submit" disabled=${!isFormValid}>
-            ${
-              isLoading
-                ? `Collecting data...${progressPercent ? ` ${progressPercent}%` : ''}`
-                : 'Build Report'
-            }
+            ${isLoading
+      ? `Collecting data...${progressPercent ? ` ${progressPercent}%` : ''}`
+      : 'Build Report'
+    }
           </button>
           ${isLoading && progressLabel && html`<p class="loading-text">${progressLabel}</p>`}
           ${error && html`<p class="error-text">${error}</p>`}
