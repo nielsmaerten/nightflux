@@ -159,10 +159,14 @@ function App() {
   const [endDate, setEndDate] = useState(formatDateIso(defaultEnd));
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [progressText, setProgressText] = useState('');
   const startInputRef = useRef(null);
   const endInputRef = useRef(null);
   const startPickerRef = useRef(null);
   const endPickerRef = useRef(null);
+  const progressIntervalRef = useRef(null);
+  const progressStartRef = useRef(0);
+  const estimatedDurationRef = useRef(0);
 
   useEffect(() => {
     initParticles();
@@ -273,6 +277,63 @@ function App() {
 
   const isFormValid = isValidUrl && isDateRangeValid && !isLoading;
 
+  function calculateEstimatedSeconds(startIso, endIso) {
+    try {
+      const start = new Date(startIso);
+      const end = new Date(endIso);
+      if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+        return 5;
+      }
+      const msPerDay = 1000 * 60 * 60 * 24;
+      const diffMs = end.getTime() - start.getTime();
+      const diffDays = Math.max(1, Math.floor(diffMs / msPerDay) + 1);
+      return Math.max(5, diffDays);
+    } catch (_err) {
+      return 5;
+    }
+  }
+
+  function formatRemainingSeconds(seconds) {
+    if (seconds <= 0) return 'Wrapping up...';
+    if (seconds <= 5) return 'A few seconds left...';
+    if (seconds <= 20) return 'Less than half a minute left.';
+    if (seconds < 50) return 'Less than a minute left.';
+    if (seconds < 80) return 'About a minute left.';
+
+    const minutes = Math.ceil(seconds / 60);
+    if (minutes === 1) return 'Approximately 1 minute left.';
+    return `Approximately ${minutes} minutes left.`;
+  }
+
+  useEffect(() => {
+    if (!isLoading) {
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+        progressIntervalRef.current = null;
+      }
+      setProgressText('');
+      return undefined;
+    }
+
+    const totalDuration = estimatedDurationRef.current || 5000;
+    progressStartRef.current = Date.now();
+    setProgressText(formatRemainingSeconds(Math.ceil(totalDuration / 1000)));
+
+    progressIntervalRef.current = setInterval(() => {
+      const elapsed = Date.now() - progressStartRef.current;
+      const remainingMs = Math.max(0, totalDuration - elapsed);
+      const remainingSeconds = Math.ceil(remainingMs / 1000);
+      setProgressText(formatRemainingSeconds(remainingSeconds));
+    }, 1000);
+
+    return () => {
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+        progressIntervalRef.current = null;
+      }
+    };
+  }, [isLoading]);
+
   async function handleSubmit(event) {
     event.preventDefault();
     setError('');
@@ -285,6 +346,9 @@ function App() {
     };
 
     try {
+      const estimatedSeconds = calculateEstimatedSeconds(startDate, endDate);
+      estimatedDurationRef.current = estimatedSeconds * 1000;
+      setProgressText(formatRemainingSeconds(estimatedSeconds));
       setIsLoading(true);
       toggleBlackholeEffect(true);
       const responseText = await postReport(payload);
@@ -344,6 +408,7 @@ function App() {
           <button id="build-report-btn" class="primary" type="submit" disabled=${!isFormValid}>
             ${isLoading ? 'Collecting data...' : 'Build Report'}
           </button>
+          ${isLoading && progressText && html`<p class="helper-text loading-text">${progressText}</p>`}
           ${error && html`<p class="error-text">${error}</p>`}
         </div>
       </form>

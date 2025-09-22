@@ -144,6 +144,11 @@ button.primary:disabled {
   color: rgba(229, 236, 255, 0.66);
 }
 
+.loading-text {
+  color: rgba(158, 194, 255, 0.8);
+  font-style: italic;
+}
+
 .error-text {
   color: #ff8080;
   font-size: 0.82rem;
