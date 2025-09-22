@@ -44,6 +44,37 @@ function resetParticleVelocities(instance) {
   });
 }
 
+function easeOutCubic(t) {
+  return 1 - (1 - t) ** 3;
+}
+
+function easeInOutSine(t) {
+  return -(Math.cos(Math.PI * t) - 1) / 2;
+}
+
+function computeFauxProgress(elapsedSeconds, totalSeconds) {
+  if (totalSeconds <= 0) return 0;
+  const clampedElapsed = Math.max(0, elapsedSeconds);
+  const ratio = clampedElapsed / totalSeconds;
+  const fastPhaseLimit = 0.35;
+  const fastProgress = 0.75;
+
+  if (ratio <= fastPhaseLimit) {
+    const normalizedFast = ratio / fastPhaseLimit;
+    return fastProgress * easeOutCubic(normalizedFast);
+  }
+
+  if (ratio <= 1) {
+    const normalizedSlow = (ratio - fastPhaseLimit) / (1 - fastPhaseLimit);
+    const slowPortion = 0.23;
+    return fastProgress + slowPortion * easeInOutSine(normalizedSlow);
+  }
+
+  const overflow = ratio - 1;
+  const trickle = Math.min(0.02, overflow / 12);
+  return Math.min(0.99, 0.98 + trickle);
+}
+
 function toggleBlackholeEffect(enabled) {
   const instance = getParticlesInstance();
   if (!instance) return;
@@ -108,6 +139,56 @@ function toggleBlackholeEffect(enabled) {
   }
 }
 
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+/**
+ * Estimates how long it would take to generate a report for the given date range.
+ * On average, it takes about 1.5 seconds per day of data.
+ * @param {*} startIso
+ * @param {*} endIso
+ * @returns
+ */
+function estimateDurationSeconds(startIso, endIso) {
+  if (!startIso || !endIso) return 0;
+  const startMs = Date.parse(`${startIso}T00:00:00Z`);
+  const endMs = Date.parse(`${endIso}T00:00:00Z`);
+  if (Number.isNaN(startMs) || Number.isNaN(endMs) || endMs < startMs) {
+    return 0;
+  }
+
+  const diffDays = Math.floor((endMs - startMs) / MS_PER_DAY);
+  return Math.max(1, diffDays) * 1.5;
+}
+
+function formatTimeRemainingLabel(remainingSeconds, isPastEstimate) {
+  if (isPastEstimate) {
+    return 'Taking a bit longer than expected—hang tight!';
+  }
+
+  if (remainingSeconds >= 120) {
+    const minutes = Math.ceil(remainingSeconds / 60);
+    return `Approximately ${minutes} minute${minutes === 1 ? '' : 's'} left.`;
+  }
+
+  if (remainingSeconds >= 75) {
+    return 'About a minute left.';
+  }
+
+  if (remainingSeconds >= 45) {
+    return 'Less than a minute left.';
+  }
+
+  if (remainingSeconds >= 15) {
+    return 'A few seconds left.';
+  }
+
+  if (remainingSeconds > 0) {
+    return 'Almost done...';
+  }
+
+  return '';
+}
+
 async function postReport(payload) {
   const response = await fetch('/collect/v1', {
     method: 'POST',
@@ -158,11 +239,18 @@ function App() {
   const [startDate, setStartDate] = useState(formatDateIso(defaultStart));
   const [endDate, setEndDate] = useState(formatDateIso(defaultEnd));
   const [isLoading, setIsLoading] = useState(false);
+  const [estimatedDurationSeconds, setEstimatedDurationSeconds] = useState(0);
+  const [timeRemainingSeconds, setTimeRemainingSeconds] = useState(0);
+  const [progressPercent, setProgressPercent] = useState(0);
   const [error, setError] = useState('');
   const startInputRef = useRef(null);
   const endInputRef = useRef(null);
   const startPickerRef = useRef(null);
   const endPickerRef = useRef(null);
+  const countdownRef = useRef(null);
+  const progressAnimationRef = useRef(null);
+  const progressStartTimeRef = useRef(0);
+  const resetProgressTimeoutRef = useRef(null);
 
   useEffect(() => {
     initParticles();
@@ -285,6 +373,10 @@ function App() {
     };
 
     try {
+      const estimateSeconds = estimateDurationSeconds(startDate, endDate);
+      setEstimatedDurationSeconds(estimateSeconds);
+      setTimeRemainingSeconds(estimateSeconds);
+      setProgressPercent(0);
       setIsLoading(true);
       toggleBlackholeEffect(true);
       const responseText = await postReport(payload);
@@ -294,10 +386,105 @@ function App() {
       console.error(err);
       setError('Something went wrong while building your report. Please try again.');
     } finally {
-      setIsLoading(false);
+      setProgressPercent(100);
       toggleBlackholeEffect(false);
+      if (resetProgressTimeoutRef.current) {
+        clearTimeout(resetProgressTimeoutRef.current);
+      }
+      resetProgressTimeoutRef.current = setTimeout(() => {
+        setIsLoading(false);
+        setEstimatedDurationSeconds(0);
+        setTimeRemainingSeconds(0);
+        setProgressPercent(0);
+        resetProgressTimeoutRef.current = null;
+      }, 220);
     }
   }
+
+  useEffect(() => {
+    if (countdownRef.current) {
+      clearInterval(countdownRef.current);
+      countdownRef.current = null;
+    }
+
+    if (!isLoading || estimatedDurationSeconds <= 0) {
+      return undefined;
+    }
+
+    countdownRef.current = setInterval(() => {
+      setTimeRemainingSeconds((previous) => {
+        if (previous <= 0) {
+          return 0;
+        }
+        return previous - 1;
+      });
+    }, 1000);
+
+    return () => {
+      if (countdownRef.current) {
+        clearInterval(countdownRef.current);
+        countdownRef.current = null;
+      }
+    };
+  }, [isLoading, estimatedDurationSeconds]);
+
+  useEffect(() => {
+    if (!isLoading || estimatedDurationSeconds <= 0) {
+      if (progressAnimationRef.current) {
+        cancelAnimationFrame(progressAnimationRef.current);
+        progressAnimationRef.current = null;
+      }
+      return undefined;
+    }
+
+    progressStartTimeRef.current = performance.now();
+    if (progressAnimationRef.current) {
+      cancelAnimationFrame(progressAnimationRef.current);
+      progressAnimationRef.current = null;
+    }
+
+    const tick = () => {
+      const elapsedMs = performance.now() - progressStartTimeRef.current;
+      const faux = computeFauxProgress(elapsedMs / 1000, estimatedDurationSeconds);
+      setProgressPercent((previous) => {
+        const capped = Math.min(0.99, faux);
+        const next = Math.max(previous, Math.min(99, Math.floor(capped * 100)));
+        return next === previous ? previous : next;
+      });
+      progressAnimationRef.current = requestAnimationFrame(tick);
+    };
+
+    progressAnimationRef.current = requestAnimationFrame(tick);
+
+    return () => {
+      if (progressAnimationRef.current) {
+        cancelAnimationFrame(progressAnimationRef.current);
+        progressAnimationRef.current = null;
+      }
+    };
+  }, [isLoading, estimatedDurationSeconds]);
+
+  useEffect(() => {
+    return () => {
+      if (progressAnimationRef.current) {
+        cancelAnimationFrame(progressAnimationRef.current);
+      }
+      if (resetProgressTimeoutRef.current) {
+        clearTimeout(resetProgressTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const progressLabel = useMemo(() => {
+    if (!isLoading) return '';
+    const pastEstimate = estimatedDurationSeconds > 0 && timeRemainingSeconds <= 0;
+    const label = formatTimeRemainingLabel(timeRemainingSeconds, pastEstimate);
+    if (label) return label;
+    if (pastEstimate) {
+      return 'Taking a bit longer than expected—hang tight!';
+    }
+    return '';
+  }, [isLoading, estimatedDurationSeconds, timeRemainingSeconds]);
 
   return html`
     <div>
@@ -341,9 +528,25 @@ function App() {
         </div>
 
         <div class="button-row">
-          <button id="build-report-btn" class="primary" type="submit" disabled=${!isFormValid}>
-            ${isLoading ? 'Collecting data...' : 'Build Report'}
+          <button
+            id="build-report-btn"
+            class=${`primary ${isLoading ? 'loading' : ''}`}
+            type="submit"
+            disabled=${!isFormValid}
+          >
+            ${
+              isLoading &&
+              html`<span class="progress-fill" style=${{ width: `${progressPercent}%` }}></span>`
+            }
+            <span class="button-label">
+              ${
+                isLoading
+                  ? `Collecting data...${progressPercent ? ` ${progressPercent}%` : ''}`
+                  : 'Build Report'
+              }
+            </span>
           </button>
+          ${isLoading && progressLabel && html`<p class="loading-text">${progressLabel}</p>`}
           ${error && html`<p class="error-text">${error}</p>`}
         </div>
       </form>
