@@ -1,21 +1,25 @@
 This file contains a structured export of diabetes data. Follow these instructions:
 
 Use the data in this file to assist with tasks such as:
+
 - Identify glucose trends
 - Correlate meals, insulin doses, and basal adjustments
 - Reporting or visualization for therapy optimization
 
 At a high level, when asked a question regarding the data:
+
 - Parse and query this file in a code execution environment
 - Use the schema definitions below as a guide to locate relevant data
 - Provide accurate answers grounded in the data
 - When useful, generate visualizations (e.g. charts of glucose, insulin, carbs)
 
 Extra notes:
+
 - Day objects are self-contained: the entries do not spill over into other days.
 - If you detect missing data (e.g. in CGM readings), confirm with the user before attempting to fill the gaps.
 
 Schema definition:
+
 - meta:
   - schema_version: format version number
   - utc_generated_time: file creation timestamp
